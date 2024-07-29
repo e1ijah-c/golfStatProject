@@ -9,7 +9,7 @@ PAR_3_MAX = 240
 PAR_3_MIN = 100
 
 PAR_4_MAX = 450
-PAR_4_MIN = 240
+PAR_4_MIN = 280
 
 PAR_5_MAX = 580
 PAR_5_MIN = 450
@@ -107,37 +107,37 @@ for i in range(18):
     dist2Go = yardage
     YARDAGE.append(yardage) 
     
-    while dist2Go > 40:
+    while dist2Go > 15:
         
-        if dist2Go > 240:
+        if dist2Go > 240 and strokes == 0:
             randClub = 0
-            strokeDist = random.randint(CLUB_DISTS[randClub] - 20, CLUB_DISTS[randClub])
-        elif 240 > dist2Go > 200:
+            strokeDist = random.randint(CLUB_DISTS[randClub] - 10, CLUB_DISTS[randClub] + 5)
+        elif dist2Go > 200:
             randClub = random.randint(1, 2)
-            strokeDist = random.randint(CLUB_DISTS[randClub] - 20, CLUB_DISTS[randClub])
-        elif 210 >= dist2Go > 180:
+            strokeDist = random.randint(CLUB_DISTS[randClub] - 10, CLUB_DISTS[randClub] + 5)
+        elif 200 >= dist2Go > 180:
             randClub = int(random.randint(3, 4))
-            strokeDist = random.randint(CLUB_DISTS[randClub] - 20, CLUB_DISTS[randClub])
+            strokeDist = random.randint(CLUB_DISTS[randClub] - 10, CLUB_DISTS[randClub] + 5)
         elif 180 >= dist2Go > 150:
             randClub = int(random.randint(5, 6))
-            strokeDist = random.randint(CLUB_DISTS[randClub] - 20, CLUB_DISTS[randClub])
+            strokeDist = random.randint(CLUB_DISTS[randClub] - 10, CLUB_DISTS[randClub] + 5)
         elif 150 >= dist2Go > 120:
             randClub = int(random.randint(7, 8))
-            strokeDist = random.randint(CLUB_DISTS[randClub] - 20, CLUB_DISTS[randClub])
+            strokeDist = random.randint(CLUB_DISTS[randClub] - 10, CLUB_DISTS[randClub] + 5)
         elif 120 >= dist2Go > 90:
             randClub = int(random.randint(9, 10))
-            strokeDist = random.randint(CLUB_DISTS[randClub] - 10, CLUB_DISTS[randClub])
+            strokeDist = random.randint(CLUB_DISTS[randClub] - 10, CLUB_DISTS[randClub] + 5)
         elif 90 >= dist2Go > 50:
             randClub = int(random.randint(11, 12))
-            strokeDist = random.randint(CLUB_DISTS[randClub] - 5, CLUB_DISTS[randClub])
+            strokeDist = random.randint(CLUB_DISTS[randClub] - 5, CLUB_DISTS[randClub] + 5)
         else:
             randClub = int(random.randint(11, 12))
-            strokeDist = random.randint(CLUB_DISTS[randClub] - 5, CLUB_DISTS[randClub])
+            strokeDist = random.randint(CLUB_DISTS[randClub] - 5, CLUB_DISTS[randClub] + 5)
 
         if dist2Go - strokeDist < 0:
             overShot = dist2Go - strokeDist
 
-            strokeDist -= random.randint( -1 * overShot + 1, -1 * overShot + 30) 
+            strokeDist -= random.randint( -1 * overShot + 1, -1 * overShot + 10) 
 
         clubs.append(CLUBS[randClub])
 
@@ -158,18 +158,12 @@ for i in range(18):
         clubs.append(CLUBS[13])
         lies.append(LIES[10])
 
-        if dist2Go > 15:
-            puttDist = random.randint(15, dist2Go)
-        elif 15 >= dist2Go > 6:
-            puttDist = random.randint(6, dist2Go)
+        if dist2Go >= 10:
+            puttDist = dist2Go - random.randint(1, 3)
+        elif dist2Go > 3:
+            puttDist = dist2Go - random.randint(0, 2)
         else:
             puttDist = dist2Go
-            distances.append(puttDist)
-
-            dist2Go -= puttDist
-            strokes += 1
-
-            break
 
         distances.append(puttDist)
 
