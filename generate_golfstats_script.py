@@ -14,14 +14,6 @@ PAR_4_MIN = 240
 PAR_5_MAX = 580
 PAR_5_MIN = 450
 
-PAR_3_PUTTS = [1, 1, 1, 1, 2, 2, 2, 2, 2, 3]
-PAR_4_PUTTS = [1, 1, 1, 2, 2, 2, 2, 2, 3, 3]
-PAR_5_PUTTS = [1, 1, 2, 2, 2, 2, 2, 3, 3, 3]
-
-PAR_3_STROKES = [1, 1, 2, 2, 2, 2, 2, 2, 2, 3]
-PAR_4_STROKES = [2, 2, 2, 3, 3, 3, 3, 3, 4, 4]
-PAR_5_STROKES = [2, 3, 3, 4, 4, 4, 4, 4, 5, 5]
-
 data = []
 distances = []
 clubs = []
@@ -40,6 +32,7 @@ PARS = [3, 3, 3, 3,
        5, 5, 5, 5]
 
 YARDAGE = ['YARDAGE']
+STROKES = ['STROKES']
 
 STROKE_1_DISTANCE = ['STROKE_1_DISTANCE']
 STROKE_1_CLUB = ['STROKE_1_CLUB']
@@ -88,8 +81,8 @@ random.shuffle(PARS)
 for i in range(len(PARS)):
     PAR.append(PARS[i])
 
-# apped HOLE and PAR lists to the main data list
-data.extend([HOLE, PAR, YARDAGE,
+# added HOLE and PAR lists to the main data list
+data.extend([HOLE, PAR, YARDAGE, STROKES, 
              STROKE_1_DISTANCE, STROKE_1_CLUB, STROKE_1_LIE, 
              STROKE_2_DISTANCE, STROKE_2_CLUB, STROKE_2_LIE,
              STROKE_3_DISTANCE, STROKE_3_CLUB, STROKE_3_LIE,
@@ -101,27 +94,20 @@ data.extend([HOLE, PAR, YARDAGE,
              STROKE_9_DISTANCE, STROKE_9_CLUB, STROKE_9_LIE,
              STROKE_10_DISTANCE, STROKE_10_CLUB, STROKE_10_LIE])
 
+# simulate golf game for all 18 holes
 for i in range(18):
     
     if PARS[i] == 3:
         yardage = int(random.randint(PAR_3_MIN, PAR_3_MAX))
-        #putts = int(random.choice(PAR_3_PUTTS))
-        #strokes = int(random.choice(PAR_3_STROKES)) 
-    
     if PARS[i] == 4:
         yardage = int(random.randint(PAR_4_MIN, PAR_4_MAX))
-        #putts = int(random.choice(PAR_4_PUTTS))
-        #strokes = int(random.choice(PAR_4_STROKES)) 
-
     if PARS[i] == 5:
         yardage = int(random.randint(PAR_5_MIN, PAR_5_MAX))
-        #putts = int(random.choice(PAR_5_PUTTS))
-        #strokes = int(random.choice(PAR_5_STROKES))
 
     dist2Go = yardage
     YARDAGE.append(yardage) 
     
-    while dist2Go > 20:
+    while dist2Go > 40:
         
         if dist2Go > 240:
             randClub = 0
@@ -148,25 +134,19 @@ for i in range(18):
             randClub = int(random.randint(11, 12))
             strokeDist = random.randint(CLUB_DISTS[randClub] - 5, CLUB_DISTS[randClub])
 
-            if dist2Go - strokeDist < 0:
-                strokeDist = 20 - random.randint(5, 15) 
+        if dist2Go - strokeDist < 0:
+            overShot = dist2Go - strokeDist
 
-                clubs.append(CLUBS[randClub])
-        
-                randLie = int(random.randint(1, len(LIES) - 1))
-                lies.append(LIES[randLie])
-                            
-                distances.append(strokeDist)
-
-                dist2Go -=  strokeDist
-                strokes += 1
-
-                break
+            strokeDist -= random.randint( -1 * overShot + 1, -1 * overShot + 30) 
 
         clubs.append(CLUBS[randClub])
 
-        randLie = int(random.randint(1, len(LIES) - 1))
-        lies.append(LIES[randLie])
+        if strokes == 0:
+            randLie = 0
+            lies.append(LIES[randLie])
+        else:
+            randLie = int(random.randint(1, len(LIES) - 1))
+            lies.append(LIES[randLie])
                       
         distances.append(strokeDist)
 
@@ -254,7 +234,8 @@ for i in range(18):
             STROKE_10_CLUB.append(clubs[9])
             STROKE_10_LIE.append(lies[9])
 
-    
+    STROKES.append(strokes)
+
     totalStrokes += strokes
     
     print("PAR:", PARS[i],"STROKES:", strokes,"YARDAGE:", yardage)
@@ -265,6 +246,7 @@ for i in range(18):
     clubs.clear()
     lies.clear()
 
+# format, print and save data into a .csv file
 print("TOTAL PAR: 72", "TOTAL STROKES: ", totalStrokes)
 
 df = pd.DataFrame(data)
