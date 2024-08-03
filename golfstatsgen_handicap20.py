@@ -2,7 +2,7 @@ import pandas as pd
 import random 
 
 CLUBS = ["DRIVER", "3 Wood", "5 Wood", "4 Iron", "5 Iron", "6 Iron", "7 Iron", "8 Iron", "9 Iron", "P Wedge", "G Wedge", "S Wedge", "L Wedge", "Putter"]
-CLUB_DISTS = [240, 200, 180, 175, 170, 160, 150, 140, 130, 100, 85, 70, 25]
+CLUB_DISTS = [215, 175, 155, 150, 145, 135, 125, 115, 105, 75, 60, 45, 10]
 LIES = ["TEE BOX", "FAIRWAY", "FAIRWAY", "FAIRWAY", "FAIRWAY", "ROUGH", "ROUGH", "ROUGH", "BUNKER", "OTHER/HAZARD", "GREEN"]
 
 PAR_3_MAX = 240
@@ -244,10 +244,9 @@ for i in range(18):
 df = pd.DataFrame(data)
 print(df)
 
-df.to_csv('golf_stats_handicap0.csv', index=False)
+df.to_csv('golf_stats_handicap20.csv', index=False)
 
 print("TOTAL PAR: 72", "TOTAL STROKES: ", totalStrokes)
-
 
 
 
