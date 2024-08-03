@@ -241,12 +241,12 @@ for i in range(18):
     lies.clear()
 
 # format, print and save data into a .csv file
-print("TOTAL PAR: 72", "TOTAL STROKES: ", totalStrokes)
-
 df = pd.DataFrame(data)
 print(df)
 
 df.to_csv('golf_stats_handicap10.csv', index=False)
+
+print("TOTAL PAR: 72", "TOTAL STROKES: ", totalStrokes)
 
 
 

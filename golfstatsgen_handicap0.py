@@ -111,22 +111,22 @@ for i in range(18):
         
         if dist2Go > 240 and strokes == 0:
             randClub = 0
-            strokeDist = random.randint(CLUB_DISTS[randClub] - 10, CLUB_DISTS[randClub] + 5)
+            strokeDist = random.randint(CLUB_DISTS[randClub] - 5, CLUB_DISTS[randClub] + 5)
         elif dist2Go > 200:
             randClub = random.randint(1, 2)
-            strokeDist = random.randint(CLUB_DISTS[randClub] - 10, CLUB_DISTS[randClub] + 5)
+            strokeDist = random.randint(CLUB_DISTS[randClub] - 5, CLUB_DISTS[randClub] + 5)
         elif 200 >= dist2Go > 180:
             randClub = int(random.randint(3, 4))
-            strokeDist = random.randint(CLUB_DISTS[randClub] - 10, CLUB_DISTS[randClub] + 5)
+            strokeDist = random.randint(CLUB_DISTS[randClub] - 5, CLUB_DISTS[randClub] + 5)
         elif 180 >= dist2Go > 150:
             randClub = int(random.randint(5, 6))
-            strokeDist = random.randint(CLUB_DISTS[randClub] - 10, CLUB_DISTS[randClub] + 5)
+            strokeDist = random.randint(CLUB_DISTS[randClub] - 5, CLUB_DISTS[randClub] + 5)
         elif 150 >= dist2Go > 120:
             randClub = int(random.randint(7, 8))
-            strokeDist = random.randint(CLUB_DISTS[randClub] - 10, CLUB_DISTS[randClub] + 5)
+            strokeDist = random.randint(CLUB_DISTS[randClub] - 5, CLUB_DISTS[randClub] + 5)
         elif 120 >= dist2Go > 90:
             randClub = int(random.randint(9, 10))
-            strokeDist = random.randint(CLUB_DISTS[randClub] - 10, CLUB_DISTS[randClub] + 5)
+            strokeDist = random.randint(CLUB_DISTS[randClub] - 5, CLUB_DISTS[randClub] + 5)
         elif 90 >= dist2Go > 50:
             randClub = int(random.randint(11, 12))
             strokeDist = random.randint(CLUB_DISTS[randClub] - 5, CLUB_DISTS[randClub] + 5)
