@@ -6,7 +6,3 @@ Depicts the following for each hole:
 - Yardage
 - Total Strokes
 - Each stroke's distance, club used & lie
-
-
-
-
