@@ -3,8 +3,8 @@ import pandas as pd
 clubColumnsStrings = ['STROKE_1_CLUB', 'STROKE_2_CLUB', 'STROKE_3_CLUB', 'STROKE_4_CLUB', 'STROKE_5_CLUB', 
                       'STROKE_6_CLUB', 'STROKE_7_CLUB', 'STROKE_8_CLUB', 'STROKE_9_CLUB', 'STROKE_10_CLUB']
 
-scores, putts = [], []
-putt = 0
+scores, putts, strokes = [], [], []
+putt, stroke = 0, 0
 
 par3locs, par4locs, par5locs = [], [], []
 totalPar3Score, totalPar4Score, totalPar5Score = 0, 0, 0
@@ -12,6 +12,8 @@ avgPar3Score, avgPar4Score, avgPar5Score = 0, 0, 0
 
 # import the data that is going to get analysed as a csv file
 df = pd.read_csv('GolfDataExamples/Handicap10_1.csv')
+
+df.replace('', pd.NA, inplace=True)
 
 # get total strokes used (i.e. total score across the 18 holes)
 for i in range(len(df['STROKES'])):
@@ -30,18 +32,28 @@ for i in range(len(df['STROKES'])):
     if df['PAR'][i] == 5:
         par5locs.append(i)
     
+    """ 
+    calculate number of strokes used for each hole => value is calculated seperately again as a challenge
+    value is divided by 2 as each stroke that isn't used will consist of 2 empty cells, one for club and one for lie
+    distance is just equal to 0, hence not considered empty
+    """
+    stroke = 10 - (pd.isnull(df.loc[i, :]).sum()) / 2
+    
     for n in range(len(clubColumnsStrings)):
         # check how many times putter is used for each hole, and tracks it using putt variable
         if df[clubColumnsStrings[n]][i] == 'Putter':
             putt += 1
 
     putts.append(putt)
+    strokes.append(stroke)
 
-    # reset putt variable so next hole starts from 0 again
+    # reset putt and stroke variable so next hole starts from 0 again
     putt = 0
+    stroke = 0
 
 # add new columns after data analysis
 df['TOTAL SCORE'] = scores
+df['TOTAL STROKES'] = strokes
 df['TOTAL PUTTS'] = putts
 
 # calculate total individual scores for each par (i.e. either 3, 4 or 5) 
@@ -67,3 +79,4 @@ print(df)
 print("AVERAGE PAR 3 SCORE:", avgPar3Score)
 print("AVERAGE PAR 4 SCORE:", avgPar4Score)
 print("AVERAGE PAR 5 SCORE:", avgPar5Score)
+
