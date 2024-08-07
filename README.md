@@ -1,4 +1,4 @@
-# golf_stats_generator
+# Golf Statistics Data Science Project
 
 A simple python script that generates golf data for 18 holes.
 
