@@ -63,6 +63,7 @@ avgPar5Score = totalPar5Score / 4
 # print dataframe for reference
 print(df)
 
+# print data analysis stats
 print("AVERAGE PAR 3 SCORE:", avgPar3Score)
 print("AVERAGE PAR 4 SCORE:", avgPar4Score)
 print("AVERAGE PAR 5 SCORE:", avgPar5Score)
