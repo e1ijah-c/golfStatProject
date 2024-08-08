@@ -1,10 +1,15 @@
 import pandas as pd
 
-clubColumnsStrings = ['STROKE_1_CLUB', 'STROKE_2_CLUB', 'STROKE_3_CLUB', 'STROKE_4_CLUB', 'STROKE_5_CLUB', 
+distanceColumnStrings = ['STROKE_1_DISTANCE', 'STROKE_2_DISTANCE', 'STROKE_3_DISTANCE', 'STROKE_4_DISTANCE', 'STROKE_5_DISTANCE', 
+                         'STROKE_6_DISTANCE', 'STROKE_7_DISTANCE', 'STROKE_8_DISTANCE', 'STROKE_9_DISTANCE', 'STROKE_10_DISTANCE']
+
+clubColumnStrings = ['STROKE_1_CLUB', 'STROKE_2_CLUB', 'STROKE_3_CLUB', 'STROKE_4_CLUB', 'STROKE_5_CLUB', 
                       'STROKE_6_CLUB', 'STROKE_7_CLUB', 'STROKE_8_CLUB', 'STROKE_9_CLUB', 'STROKE_10_CLUB']
 
 lieColumnStrings = ['STROKE_1_LIE', 'STROKE_2_LIE', 'STROKE_3_LIE', 'STROKE_4_LIE', 'STROKE_5_LIE', 
                     'STROKE_6_LIE', 'STROKE_7_LIE', 'STROKE_8_LIE', 'STROKE_9_LIE', 'STROKE_10_LIE', ]
+
+clubs = ["DRIVER", "3 Wood", "5 Wood", "4 Iron", "5 Iron", "6 Iron", "7 Iron", "8 Iron", "9 Iron", "P Wedge", "G Wedge", "S Wedge", "L Wedge", "Putter"]
 
 scores, putts, strokes, gir, lieOutput = [], [], [], [], []
 putt, stroke, fairwayHits, totalGIR = 0, 0, 0, 0
@@ -13,8 +18,15 @@ par3locs, par4locs, par5locs = [], [], []
 totalPar3Score, totalPar4Score, totalPar5Score = 0, 0, 0
 avgPar3Score, avgPar4Score, avgPar5Score = 0, 0, 0
 
+clubDists, avgClubDists = {}, {}
+
 # import the data that is going to get analysed as a csv file
 df = pd.read_csv('GolfDataExamples/Handicap10_1.csv')
+
+# generate list to store distances hit by each club
+for c in range(len(clubs)):
+    club = str(clubs[c])
+    clubDists[club] = []
 
 # get total strokes used (i.e. total score across the 18 holes)
 for i in range(len(df['STROKES'])):
@@ -67,10 +79,10 @@ for i in range(len(df['STROKES'])):
     stroke = 10 - (pd.isnull(df.loc[i, :]).sum()) / 2
 
     # check how many times putter is used for each hole, and tracks it using putt variable    
-    for n in range(len(clubColumnsStrings)):
-        if df[clubColumnsStrings[n]][i] == 'Putter':
+    for n in range(len(clubColumnStrings)):
+        if df[clubColumnStrings[n]][i] == 'Putter':
             putt += 1
-
+        
     putts.append(putt)
     strokes.append(stroke)
 
@@ -78,7 +90,21 @@ for i in range(len(df['STROKES'])):
     putt = 0
     stroke = 0
 
+# store the distances hit by each club into their respective lists inside of the dictionary
+for n in range(len(clubColumnStrings)):
+    for r in range(18):
+            if pd.isnull(df.loc[r, clubColumnStrings[n]]) == False:
+                key = str(df.loc[r, clubColumnStrings[n]])
+                clubDists[key].append(int(df.loc[r, distanceColumnStrings[n]]))
 
+for c in range(len(clubs)):
+    key = str(clubs[c])
+    
+    if int(sum(clubDists[key])) == 0:
+        avgClubDists[key] = 0
+    else:
+        result = round(sum(clubDists[key]) / len(clubDists[key]), 2)
+        avgClubDists[key] = result
 
 # add new columns after data analysis
 df['SCORE'] = scores
@@ -104,7 +130,6 @@ for i in range(len(par5locs)):
     if df.loc[par5locs[i], 'STROKE_2_LIE'] == "FAIRWAY":
         fairwayHits += 1
 
-
 # turn total individual scores into average by dividing by number of par 3, 4 and 5 holes
 # dividing by 4, 10 and 4 as there are typically 4 par 3s, 10 par 4s, and 4 par 5s on an 18 hole course
 avgPar3Score = round(totalPar3Score / 4, 2)
@@ -114,21 +139,34 @@ avgPar5Score = round(totalPar5Score / 4, 2)
 # gets total number of putts used throughout all 18 holes by summing the 'PUTTS' column
 totalPutts = df.loc[: , 'PUTTS'].sum()
 
+# counts the total number of GIRs
 for g in range(len(gir)):
     if gir[g] == "YES":
         totalGIR += 1
 
 # print dataframe for reference
 print(df)
+print("")
 
 # print data analysis stats
+print("STATISTICS ________________________________________________")
+print("")
 print("AVG. PAR 3 SCORE:", avgPar3Score)
 print("AVG. PAR 4 SCORE:", avgPar4Score)
 print("AVG. PAR 5 SCORE:", avgPar5Score)
-print("TOTAL PUTTS:", totalPutts, "| AVG. PUTTS:", round(totalPutts / 18, 2))
+print("TOTAL PUTTS: {:<12} AVG. PUTTS: {}".format(totalPutts, round(totalPutts / 18, 2)))
 
 # fairways hit only applies to par 4 and 5s, hence total is divided by 14 (excludes par 3s)
-print("TOTAL FAIRWAYS HIT:", fairwayHits, "| FAIRWAY HIT PERCENTAGE (%):", round((fairwayHits / 14) * 100, 2))
-print("TOTAL GREENS IN REGULATION (GIRs):", totalGIR)
+print("TOTAL FAIRWAYS HIT: {:<5} FAIRWAY HIT PERCENTAGE (%): {}".format(fairwayHits, round((fairwayHits / 14) * 100, 2)))
+
+print("TOTAL GREENS IN REGULATION (GIR):", totalGIR)
+print("")
+
+# prints out each club and its average distance neatly 
+print("CLUB          AVG. DISTANCE")
+print("---------------------------")
+for club, avgDist in avgClubDists.items():
+    print("{:<14}{}".format(club, avgDist))
+
 
 
