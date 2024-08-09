@@ -48,26 +48,12 @@ def TotalPutts() -> int:
 def AveragePutts() -> int:
     return round(TotalPutts() / 18, 2)
 
-def TotalFairwaysHit(par3LocList: list, par4LocList: list, par5LocList: list) -> int:
-    fairwayHits = 0
-
-    for i in range(len(par3LocList)):
-        if df.loc[par3LocList[i], 'STROKE_2_LIE'] == 'FAIRWAY':
-            fairwayHits += 1
-
-    for i in range(len(par4LocList)):
-        if df.loc[par4LocList[i], 'STROKE_2_LIE'] == "FAIRWAY":
-            fairwayHits += 1
-
-    for i in range(len(par5LocList)):
-        if df.loc[par5LocList[i], 'STROKE_2_LIE'] == "FAIRWAY":
-            fairwayHits += 1
-    
-    return fairwayHits
+def TotalFairwaysHit() -> int:
+    return df['STROKE_2_LIE'].value_counts()["FAIRWAY"]
 
 def FairwayHitPercentage() -> float:
     global totalHoles
-    return round((TotalFairwaysHit(par3locs, par4locs, par5locs) / totalHoles) * 100, 2)
+    return round((TotalFairwaysHit() / totalHoles) * 100, 2)
 
 def TotalGIR() -> int:
     totalGIR = 0
@@ -90,10 +76,12 @@ def DrivingAccuracyPercentage() -> float:
     successfulLies = ["FAIRWAY", "GREEN"]
     driverLocs = {}
 
+    # create dictionary to store index for each hole that the driver was used
     for c in range(len(clubColumnStrings)):
         col = str(clubColumnStrings[c])
         driverLocs[col] = []
 
+    # store the index for each hole that a driver was used into their respective lists inside the dictionary & tally up the total times the driver was used
     for i in range(totalHoles):
         for c in range(len(clubColumnStrings)):
             if df.loc[i, clubColumnStrings[c]] == "DRIVER":
@@ -101,6 +89,8 @@ def DrivingAccuracyPercentage() -> float:
                 col = str(clubColumnStrings[c])
                 driverLocs[col].append(i)
     
+    # go through each stroke for every hole in which a driver was used 
+    # next, check if the corresponding lie is on the fairway or green; counting a successful driver attempt if it was
     for c in range(len(clubColumnStrings)):
         key = str(clubColumnStrings[c])
         for r in range(len(driverLocs[key])):
@@ -262,7 +252,7 @@ print("BIRDIES OR BETTER PERCENTAGE (%): {}".format(BirdieOrBetterPercentage()))
 print("TOTAL PUTTS: {:<12} AVG. PUTTS PER ROUND: {}".format(TotalPutts(), AveragePutts()))
 
 # fairways hit only applies to par 4 and 5s, hence total is divided by 14 (excludes par 3s)
-print("TOTAL FAIRWAYS HIT: {:<5} FAIRWAY HIT PERCENTAGE (%): {}".format(TotalFairwaysHit(par3locs, par4locs, par5locs), FairwayHitPercentage()))
+print("TOTAL FAIRWAYS HIT: {:<5} FAIRWAY HIT PERCENTAGE (%): {}".format(TotalFairwaysHit(), FairwayHitPercentage()))
 
 print("DRIVING ACCURACY PERCENTAGE (%): {}".format(DrivingAccuracyPercentage()))
 print("TOTAL GREENS IN REGULATION (GIR): {}".format(TotalGIR()))
@@ -272,7 +262,7 @@ print("")
 
 CalculateAvgClubDists()
 # prints out each club and its average distance neatly 
-print("CLUB          AVG. DISTANCE")
+print(" CLUB   AVG. DISTANCE (yds)")
 print("---------------------------")
 for club, avgDist in avgClubDists.items():
     print("{:<14}{}".format(club, avgDist))
