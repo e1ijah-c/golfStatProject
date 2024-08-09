@@ -12,12 +12,21 @@ lieColumnStrings = ['STROKE_1_LIE', 'STROKE_2_LIE', 'STROKE_3_LIE', 'STROKE_4_LI
 clubs = ["DRIVER", "3 Wood", "5 Wood", "4 Iron", "5 Iron", "6 Iron", "7 Iron", "8 Iron", "9 Iron", "P Wedge", "G Wedge", "S Wedge", "L Wedge", "Putter"]
 
 scores, putts, strokes, gir = [], [], [], []
-putt, stroke, fairwayHits = 0, 0, 0
+putt, stroke, totalHoles = 0, 0, 0
 par3locs, par4locs, par5locs = [], [], []
 clubDists, avgClubDists = {}, {}
 
 # import the data that is going to get analysed as a csv file
 df = pd.read_csv('GolfDataExamples/Handicap10_1.csv')
+
+# get total number of holes based on the index length of the dataframe
+totalHoles = len(df.index)
+
+def ScoringAverage() -> float:
+    roundsPlayed = 1
+    totalStrokes = df.loc[:, "STROKES USED"].sum()
+
+    return round((totalStrokes / roundsPlayed), 2)
 
 def CalculateAvgParScore(par: float, locList: list) -> float:
     totalParScore = 0
@@ -39,9 +48,12 @@ def TotalPutts() -> int:
 def AveragePutts() -> int:
     return round(TotalPutts() / 18, 2)
 
-def TotalFairwaysHit(par4LocList: list, par5LocList: list) -> int:
-    # check if fairway is hit from tee off for all par 4 & 5 holes
-    global fairwayHits
+def TotalFairwaysHit(par3LocList: list, par4LocList: list, par5LocList: list) -> int:
+    fairwayHits = 0
+
+    for i in range(len(par3LocList)):
+        if df.loc[par3LocList[i], 'STROKE_2_LIE'] == 'FAIRWAY':
+            fairwayHits += 1
 
     for i in range(len(par4LocList)):
         if df.loc[par4LocList[i], 'STROKE_2_LIE'] == "FAIRWAY":
@@ -54,10 +66,12 @@ def TotalFairwaysHit(par4LocList: list, par5LocList: list) -> int:
     return fairwayHits
 
 def FairwayHitPercentage() -> float:
-    return round((TotalFairwaysHit(par4locs, par5locs) / 14) * 100, 2)
+    global totalHoles
+    return round((TotalFairwaysHit(par3locs, par4locs, par5locs) / totalHoles) * 100, 2)
 
 def TotalGIR() -> int:
     totalGIR = 0
+    global totalHoles
     global gir
 
     # counts the total number of GIRs
@@ -67,6 +81,36 @@ def TotalGIR() -> int:
     
     return totalGIR
 
+def DrivingAccuracyPercentage() -> float:
+    global totalHoles
+    global clubColumnStrings
+    global lieColumnStrings
+    driverAttempts = 0
+    successfulDriverAttempts = 0
+    successfulLies = ["FAIRWAY", "GREEN"]
+    driverLocs = {}
+
+    for c in range(len(clubColumnStrings)):
+        col = str(clubColumnStrings[c])
+        driverLocs[col] = []
+
+    for i in range(totalHoles):
+        for c in range(len(clubColumnStrings)):
+            if df.loc[i, clubColumnStrings[c]] == "DRIVER":
+                driverAttempts += 1
+                col = str(clubColumnStrings[c])
+                driverLocs[col].append(i)
+    
+    for c in range(len(clubColumnStrings)):
+        key = str(clubColumnStrings[c])
+        for r in range(len(driverLocs[key])):
+            if df.loc[driverLocs[key][r], lieColumnStrings[c + 1]] in successfulLies:
+                successfulDriverAttempts += 1
+
+    #print(successfulDriverAttempts)
+    return round((successfulDriverAttempts / driverAttempts) * 100, 2)
+
+
 def CalculateAvgClubDists():
     # generate list to store distances hit by each club
     for c in range(len(clubs)):
@@ -75,7 +119,7 @@ def CalculateAvgClubDists():
 
     # store the distances hit by each club into their respective lists inside of the dictionary
     for n in range(len(clubColumnStrings)):
-        for r in range(18):
+        for r in range(totalHoles):
                 if pd.isnull(df.loc[r, clubColumnStrings[n]]) == False:
                     key = str(df.loc[r, clubColumnStrings[n]])
                     clubDists[key].append(int(df.loc[r, distanceColumnStrings[n]]))
@@ -89,6 +133,60 @@ def CalculateAvgClubDists():
         else:
             result = round(sum(clubDists[key]) / len(clubDists[key]), 2)
             avgClubDists[key] = result
+
+def ScramblingPercentage() -> float:
+    global totalHoles
+    girsMissed = totalHoles - TotalGIR()
+    missedGIRLocs = []
+    scrambles = 0
+
+    # get location of all the holes where GIR is missed
+    for i in range(totalHoles):
+        if df.loc[i, "GIR"] == "NO":
+            missedGIRLocs.append(i)
+    
+    # for each of these holes, check if par or better is met
+    for i in range(len(missedGIRLocs)):
+        if df.loc[missedGIRLocs[i], "SCORE"] <= 0:
+            scrambles += 1
+    
+    return round((scrambles / girsMissed) * 100, 2)
+
+def SandSavePercentage() -> float:
+    global totalHoles
+    global lieColumnStrings
+    sandShots = 0
+    sandShotLocs = []
+    sandSaves = 0
+
+    # get number of shots from the bunker and their locations in the dataframe
+    for i in range(totalHoles):
+        for l in range(len(lieColumnStrings)):
+            if df.loc[i, lieColumnStrings[l]] == "BUNKER":
+                sandShots += 1
+                sandShotLocs.append(i)
+    
+    # remove duplicates in the sandShotLocs list (i.e. holes where bunker was hit more than once)
+    # works by creating dictionary which cannot contain duplicates
+    sandShotLocs = list(dict.fromkeys(sandShotLocs)) 
+
+    # check for each of these holes where bunker was landed on, that a par or better was achieved
+    for i in range(len(sandShotLocs)):
+        if df.loc[sandShotLocs[i], "SCORE"] <= 0:
+            sandSaves += 1
+
+    return round((sandSaves / sandShots) * 100, 2)
+
+def BirdieOrBetterPercentage() -> float:
+    global totalHoles
+    birdiesOrBetter = 0
+
+    for i in range(totalHoles):
+        if df.loc[i, "SCORE"] <= -1:
+            birdiesOrBetter += 1
+    
+    return round((birdiesOrBetter / totalHoles) * 100, 2)
+
 
 def GenerateNewColumns():
     global putt
@@ -156,15 +254,20 @@ print("")
 # print data analysis stats
 print("STATISTICS ________________________________________________")
 print("")
-print("AVG. PAR 3 SCORE:", CalculateAvgParScore(3, par3locs))
-print("AVG. PAR 4 SCORE:", CalculateAvgParScore(4, par4locs))
-print("AVG. PAR 5 SCORE:", CalculateAvgParScore(5, par5locs))
-print("TOTAL PUTTS: {:<12} AVG. PUTTS: {}".format(TotalPutts(), AveragePutts()))
+print("SCORING AVERAGE: {}".format(ScoringAverage()))
+print("AVG. PAR 3 SCORE: {}".format(CalculateAvgParScore(3, par3locs)))
+print("AVG. PAR 4 SCORE: {}".format(CalculateAvgParScore(4, par4locs)))
+print("AVG. PAR 5 SCORE: {}".format(CalculateAvgParScore(5, par5locs)))
+print("BIRDIES OR BETTER PERCENTAGE (%): {}".format(BirdieOrBetterPercentage()))
+print("TOTAL PUTTS: {:<12} AVG. PUTTS PER ROUND: {}".format(TotalPutts(), AveragePutts()))
 
 # fairways hit only applies to par 4 and 5s, hence total is divided by 14 (excludes par 3s)
-print("TOTAL FAIRWAYS HIT: {:<5} FAIRWAY HIT PERCENTAGE (%): {}".format(TotalFairwaysHit(par4locs, par5locs), FairwayHitPercentage()))
+print("TOTAL FAIRWAYS HIT: {:<5} FAIRWAY HIT PERCENTAGE (%): {}".format(TotalFairwaysHit(par3locs, par4locs, par5locs), FairwayHitPercentage()))
 
-print("TOTAL GREENS IN REGULATION (GIR):", TotalGIR())
+print("DRIVING ACCURACY PERCENTAGE (%): {}".format(DrivingAccuracyPercentage()))
+print("TOTAL GREENS IN REGULATION (GIR): {}".format(TotalGIR()))
+print("SCRAMBLING PERCENTAGE(%): {}".format(ScramblingPercentage()))
+print("SAND SAVE PERCENTAGE (%): {}".format(SandSavePercentage()))
 print("")
 
 CalculateAvgClubDists()
