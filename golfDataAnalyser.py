@@ -97,7 +97,6 @@ def DrivingAccuracyPercentage() -> float:
             if df.loc[driverLocs[key][r], lieColumnStrings[c + 1]] in successfulLies:
                 successfulDriverAttempts += 1
 
-    #print(successfulDriverAttempts)
     return round((successfulDriverAttempts / driverAttempts) * 100, 2)
 
 
@@ -176,6 +175,59 @@ def BirdieOrBetterPercentage() -> float:
             birdiesOrBetter += 1
     
     return round((birdiesOrBetter / totalHoles) * 100, 2)
+
+def ProximityToHole() -> float:
+    global totalHoles
+    global lieColumnStrings
+    global distanceColumnStrings
+    duplicates = []
+    holeProximities = []
+    greenDict = {}
+    index = 0
+
+    for l in range(len(lieColumnStrings)):
+        lie = str(lieColumnStrings[l])
+        greenDict[lie] = []
+    
+    for i in range(totalHoles):
+        for l in range(len(lieColumnStrings)):
+            if df.loc[i, lieColumnStrings[l]] == "GREEN":
+                key = str(lieColumnStrings[l])
+                greenDict[key].append(i)
+    
+    for l in range(len(lieColumnStrings)):
+        key = str(lieColumnStrings[l])
+        for i in range(totalHoles):
+            if i in greenDict[key]:
+                duplicates.append(i)
+        
+    duplicates = list(dict.fromkeys(duplicates))
+
+    for d in range(len(duplicates)):
+        count = 0
+        for l in range(len(lieColumnStrings)):
+            key = str(lieColumnStrings[l])
+            if duplicates[d] in greenDict[key]:
+                if count == 0:
+                    count += 1
+                else:
+                    greenDict[key].remove(duplicates[d])
+    
+    for l in range(len(lieColumnStrings)):        
+        key = str(lieColumnStrings[l])
+        for g in range(len(greenDict[key])):
+            dists = []
+            for a in range(l + 1):
+                if a >= 1:
+                    dist = int(df.loc[greenDict[key][g], distanceColumnStrings[l - a]])
+                    dists.append(dist)
+            holeYardage = df.loc[greenDict[key][g], "YARDAGE"]
+            proximity = int(holeYardage - sum(dists))
+            holeProximities.append(proximity)
+            dists.clear()         
+
+    return round(sum(holeProximities) / totalHoles, 2)
+
 
 
 def GenerateNewColumns():
@@ -258,6 +310,7 @@ print("DRIVING ACCURACY PERCENTAGE (%): {}".format(DrivingAccuracyPercentage()))
 print("TOTAL GREENS IN REGULATION (GIR): {}".format(TotalGIR()))
 print("SCRAMBLING PERCENTAGE(%): {}".format(ScramblingPercentage()))
 print("SAND SAVE PERCENTAGE (%): {}".format(SandSavePercentage()))
+print("PROXIMITY TO HOLE (yds): {}".format(ProximityToHole()))
 print("")
 
 CalculateAvgClubDists()
