@@ -244,6 +244,23 @@ def ThreePutAvoidance() -> float:
     
     return round((ThreePutts / totalHoles) * 100, 2)
 
+def BounceBackPercentage() -> float:
+    global totalHoles
+    holesAfterBogey = 0
+    birdiesAfterBogey = 0
+
+    for i in range(totalHoles):
+        if df.loc[i, 'SCORE'] >= 1 and i < totalHoles - 1:
+            if df.loc[i+1, 'SCORE'] <= -1:
+                birdiesAfterBogey += 1
+    
+    if df.loc[totalHoles - 1, 'SCORE'] >= 1:
+        holesAfterBogey = totalHoles - 1
+    else:
+        holesAfterBogey = totalHoles
+    
+    return round((birdiesAfterBogey / holesAfterBogey) * 100, 2)
+
 def GenerateNewColumns():
     global putt
     lieOutput = []    
@@ -326,6 +343,7 @@ print("SCRAMBLING PERCENTAGE(%): {}".format(ScramblingPercentage()))
 print("SAND SAVE PERCENTAGE (%): {}".format(SandSavePercentage()))
 print("PROXIMITY TO HOLE (yds): {}".format(ProximityToHole()))
 print("THREE PUT AVOIDANCE (%): {}".format(ThreePutAvoidance()))
+print("BOUNCE BACK PERCENTAGE (%): {}".format(BounceBackPercentage()))
 print("")
 
 CalculateAvgClubDists()
