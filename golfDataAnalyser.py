@@ -183,26 +183,30 @@ def ProximityToHole() -> float:
     duplicates = []
     holeProximities = []
     greenDict = {}
-    index = 0
 
+    # create dictionary to store each stroke's lie column and the index of their greens
     for l in range(len(lieColumnStrings)):
         lie = str(lieColumnStrings[l])
         greenDict[lie] = []
     
+    # append the index of ALL green lies to its corresponding stroke in the dictionary 
     for i in range(totalHoles):
         for l in range(len(lieColumnStrings)):
             if df.loc[i, lieColumnStrings[l]] == "GREEN":
                 key = str(lieColumnStrings[l])
                 greenDict[key].append(i)
     
+    # find all the duplicates and append them to a seperate list (i.e. duplicate meaning green is hit more than once per hole)
     for l in range(len(lieColumnStrings)):
         key = str(lieColumnStrings[l])
         for i in range(totalHoles):
             if i in greenDict[key]:
                 duplicates.append(i)
-        
+    
+    # remove the duplicates from the list
     duplicates = list(dict.fromkeys(duplicates))
 
+    # remove the duplicates from the dictionary, leaving only the first instance of each green (i.e. keep the earliest stroke at which green was hit)
     for d in range(len(duplicates)):
         count = 0
         for l in range(len(lieColumnStrings)):
@@ -213,6 +217,7 @@ def ProximityToHole() -> float:
                 else:
                     greenDict[key].remove(duplicates[d])
     
+    # get the sum of the distances of all the strokes before the green was hit, and subtract from the total yardage to get proximity to hole
     for l in range(len(lieColumnStrings)):        
         key = str(lieColumnStrings[l])
         for g in range(len(greenDict[key])):
@@ -228,7 +233,16 @@ def ProximityToHole() -> float:
 
     return round(sum(holeProximities) / totalHoles, 2)
 
+def ThreePutAvoidance() -> float:
+    global totalHoles
+    ThreePutts = 0
 
+    for i in range(totalHoles):
+        putts = df.loc[i, :].value_counts()["Putter"]
+        if putts >= 3:
+            ThreePutts += 1
+    
+    return round((ThreePutts / totalHoles) * 100, 2)
 
 def GenerateNewColumns():
     global putt
@@ -311,6 +325,7 @@ print("TOTAL GREENS IN REGULATION (GIR): {}".format(TotalGIR()))
 print("SCRAMBLING PERCENTAGE(%): {}".format(ScramblingPercentage()))
 print("SAND SAVE PERCENTAGE (%): {}".format(SandSavePercentage()))
 print("PROXIMITY TO HOLE (yds): {}".format(ProximityToHole()))
+print("THREE PUT AVOIDANCE (%): {}".format(ThreePutAvoidance()))
 print("")
 
 CalculateAvgClubDists()
