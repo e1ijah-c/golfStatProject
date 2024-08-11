@@ -13,7 +13,7 @@ clubs = ["DRIVER", "3 Wood", "5 Wood", "4 Iron", "5 Iron", "6 Iron", "7 Iron", "
 
 scores, putts, strokes, gir = [], [], [], []
 putt, stroke, totalHoles = 0, 0, 0
-par3locs, par4locs, par5locs = [], [], []
+par3indexes, par4indexes, par5indexes = [], [], []
 clubDists, avgClubDists = {}, {}
 
 # import the data that is going to get analysed as a csv file
@@ -22,31 +22,26 @@ df = pd.read_csv('GolfDataExamples/Handicap10_1.csv')
 # get total number of holes based on the index length of the dataframe
 totalHoles = len(df.index)
 
-def ScoringAverage() -> float:
-    roundsPlayed = 1
+def ScoringAverage(roundsPlayed: int) -> float:
     totalStrokes = df.loc[:, "STROKES USED"].sum()
 
     return round((totalStrokes / roundsPlayed), 2)
 
-def CalculateAvgParScore(par: float, locList: list) -> float:
+def CalculateAvgParScore(par: float, parIndexList: list) -> float:
     totalParScore = 0
     
-    for i in range(len(locList)):
-        totalParScore += df.loc[locList[i], "SCORE"]
+    for i in range(len(parIndexList)):
+        totalParScore += df.loc[parIndexList[i], "SCORE"]
 
-    if par == 3 or par == 5:
-        return round(totalParScore / 4, 2)
-    elif par == 4:
-        return round(totalParScore / 10, 2)
-    else:
-        print("Error: par value is not 3, 4 or 5")
+    return round(totalParScore / len(parIndexList), 2)
 
 def TotalPutts() -> int:
     # gets total number of putts used throughout all 18 holes by summing the 'PUTTS' column
     return df.loc[: , 'PUTTS'].sum()
 
 def AveragePutts() -> int:
-    return round(TotalPutts() / 18, 2)
+    global totalHoles
+    return round(TotalPutts() / totalHoles, 2)
 
 def TotalFairwaysHit() -> int:
     return df['STROKE_2_LIE'].value_counts()["FAIRWAY"]
@@ -74,12 +69,12 @@ def DrivingAccuracyPercentage() -> float:
     driverAttempts = 0
     successfulDriverAttempts = 0
     successfulLies = ["FAIRWAY", "GREEN"]
-    driverLocs = {}
+    driverLocations = {}
 
     # create dictionary to store index for each hole that the driver was used
     for c in range(len(clubColumnStrings)):
         col = str(clubColumnStrings[c])
-        driverLocs[col] = []
+        driverLocations[col] = []
 
     # store the index for each hole that a driver was used into their respective lists inside the dictionary & tally up the total times the driver was used
     for i in range(totalHoles):
@@ -87,14 +82,14 @@ def DrivingAccuracyPercentage() -> float:
             if df.loc[i, clubColumnStrings[c]] == "DRIVER":
                 driverAttempts += 1
                 col = str(clubColumnStrings[c])
-                driverLocs[col].append(i)
+                driverLocations[col].append(i)
     
     # go through each stroke for every hole in which a driver was used 
     # next, check if the corresponding lie is on the fairway or green; counting a successful driver attempt if it was
     for c in range(len(clubColumnStrings)):
         key = str(clubColumnStrings[c])
-        for r in range(len(driverLocs[key])):
-            if df.loc[driverLocs[key][r], lieColumnStrings[c + 1]] in successfulLies:
+        for r in range(len(driverLocations[key])):
+            if df.loc[driverLocations[key][r], lieColumnStrings[c + 1]] in successfulLies:
                 successfulDriverAttempts += 1
 
     return round((successfulDriverAttempts / driverAttempts) * 100, 2)
@@ -126,17 +121,17 @@ def CalculateAvgClubDists():
 def ScramblingPercentage() -> float:
     global totalHoles
     girsMissed = totalHoles - TotalGIR()
-    missedGIRLocs = []
+    missedGIRLocations = []
     scrambles = 0
 
     # get location of all the holes where GIR is missed
     for i in range(totalHoles):
         if df.loc[i, "GIR"] == "NO":
-            missedGIRLocs.append(i)
+            missedGIRLocations.append(i)
     
     # for each of these holes, check if par or better is met
-    for i in range(len(missedGIRLocs)):
-        if df.loc[missedGIRLocs[i], "SCORE"] <= 0:
+    for i in range(len(missedGIRLocations)):
+        if df.loc[missedGIRLocations[i], "SCORE"] <= 0:
             scrambles += 1
     
     return round((scrambles / girsMissed) * 100, 2)
@@ -145,7 +140,7 @@ def SandSavePercentage() -> float:
     global totalHoles
     global lieColumnStrings
     sandShots = 0
-    sandShotLocs = []
+    sandShotLocations = []
     sandSaves = 0
 
     # get number of shots from the bunker and their locations in the dataframe
@@ -153,15 +148,15 @@ def SandSavePercentage() -> float:
         for l in range(len(lieColumnStrings)):
             if df.loc[i, lieColumnStrings[l]] == "BUNKER":
                 sandShots += 1
-                sandShotLocs.append(i)
+                sandShotLocations.append(i)
     
-    # remove duplicates in the sandShotLocs list (i.e. holes where bunker was hit more than once)
+    # remove duplicates in the sandShotLocations list (i.e. holes where bunker was hit more than once)
     # works by creating dictionary which cannot contain duplicates
-    sandShotLocs = list(dict.fromkeys(sandShotLocs)) 
+    sandShotLocations = list(dict.fromkeys(sandShotLocations)) 
 
     # check for each of these holes where bunker was landed on, that a par or better was achieved
-    for i in range(len(sandShotLocs)):
-        if df.loc[sandShotLocs[i], "SCORE"] <= 0:
+    for i in range(len(sandShotLocations)):
+        if df.loc[sandShotLocations[i], "SCORE"] <= 0:
             sandSaves += 1
 
     return round((sandSaves / sandShots) * 100, 2)
@@ -272,14 +267,14 @@ def GenerateNewColumns():
         
         # get row index of each hole's par number
         if df['PAR'][i] == 3:
-            par3locs.append(i)
+            par3indexes.append(i)
             if df.loc[i, 'STROKE_1_LIE'] == "GREEN":
                 gir.append("YES")
             else:
                 gir.append("NO")
 
         if df['PAR'][i] == 4:
-            par4locs.append(i)
+            par4indexes.append(i)
             
             for l in range(2):
                 lieOutput.append(df.loc[i, lieColumnStrings[l]])
@@ -289,7 +284,7 @@ def GenerateNewColumns():
                 gir.append("NO")
 
         if df['PAR'][i] == 5:
-            par5locs.append(i)   
+            par5indexes.append(i)   
             for l in range(3):
                 lieOutput.append(df.loc[i, lieColumnStrings[l]])
             if "GREEN" in lieOutput:
@@ -327,10 +322,10 @@ print("")
 # print data analysis stats
 print("STATISTICS ________________________________________________")
 print("")
-print("SCORING AVERAGE: {}".format(ScoringAverage()))
-print("AVG. PAR 3 SCORE: {}".format(CalculateAvgParScore(3, par3locs)))
-print("AVG. PAR 4 SCORE: {}".format(CalculateAvgParScore(4, par4locs)))
-print("AVG. PAR 5 SCORE: {}".format(CalculateAvgParScore(5, par5locs)))
+print("SCORING AVERAGE: {}".format(ScoringAverage(1)))
+print("AVG. PAR 3 SCORE: {}".format(CalculateAvgParScore(3, par3indexes)))
+print("AVG. PAR 4 SCORE: {}".format(CalculateAvgParScore(4, par4indexes)))
+print("AVG. PAR 5 SCORE: {}".format(CalculateAvgParScore(5, par5indexes)))
 print("BIRDIES OR BETTER PERCENTAGE (%): {}".format(BirdieOrBetterPercentage()))
 print("TOTAL PUTTS: {:<12} AVG. PUTTS PER ROUND: {}".format(TotalPutts(), AveragePutts()))
 
