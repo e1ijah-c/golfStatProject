@@ -18,6 +18,7 @@ clubDists, avgClubDists = {}, {}
 
 # import the data that is going to get analysed as a csv file
 df = pd.read_csv('GolfDataExamples/Handicap10_1.csv')
+pd.set_option("display.max_columns", None)
 
 # get total number of holes based on the index length of the dataframe
 totalHoles = len(df.index)
