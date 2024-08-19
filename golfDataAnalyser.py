@@ -357,4 +357,4 @@ print("---------------------------")
 for club, avgDist in avgClubDists.items():
     print("{:<14}{}".format(club, avgDist))
 
-print(playerStatsDF)
+#print(playerStatsDF)
