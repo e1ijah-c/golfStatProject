@@ -18,13 +18,16 @@ clubDists, avgClubDists = {}, {}
 
 # import the data that is going to get analysed as a csv file
 df = pd.read_csv('GolfDataExamples/Handicap10_1.csv')
-pd.set_option("display.max_columns", None)
+playerStatsDF = pd.read_csv('Players_stats.csv')
+
+#pd.set_option("display.max_columns", None)
 
 # get total number of holes based on the index length of the dataframe
 totalHoles = len(df.index)
 
-def ScoringAverage(roundsPlayed: int) -> float:
+def ScoringAverage(playerID: int) -> float:
     totalStrokes = df.loc[:, "STROKES USED"].sum()
+    roundsPlayed = playerStatsDF.loc[playerID - 1, 'Rounds_played']
 
     return round((totalStrokes / roundsPlayed), 2)
 
@@ -36,23 +39,27 @@ def CalculateAvgParScore(par: float, parIndexList: list) -> float:
 
     return round(totalParScore / len(parIndexList), 2)
 
-def TotalPutts() -> int:
+def TotalPutts(playerID: int) -> int:
     # gets total number of putts used throughout all 18 holes by summing the 'PUTTS' column
-    return df.loc[: , 'PUTTS'].sum()
+    return playerStatsDF.loc[playerID - 1, 'Total Putts']
+    #return df.loc[: , 'PUTTS'].sum()
 
-def AveragePutts() -> int:
+def AveragePutts(playerID: int) -> int:
     global totalHoles
-    return round(TotalPutts() / totalHoles, 2)
+    return round(TotalPutts(playerID) / totalHoles, 2)
 
 def TotalFairwaysHit() -> int:
+    #return playerStatsDF.loc[playerID - 1, 'Total_Fairways_hit']
     return df['STROKE_2_LIE'].value_counts()["FAIRWAY"]
 
 def FairwayHitPercentage() -> float:
     global totalHoles
     return round((TotalFairwaysHit() / totalHoles) * 100, 2)
 
-def TotalGIR() -> int:
-    totalGIR = 0
+def TotalGIR(playerID: int) -> int:
+    return playerStatsDF.loc[playerID - 1, 'GIR']
+
+    """ totalGIR = 0
     global totalHoles
     global gir
 
@@ -61,7 +68,7 @@ def TotalGIR() -> int:
         if gir[g] == "YES":
             totalGIR += 1
     
-    return totalGIR
+    return totalGIR """
 
 def DrivingAccuracyPercentage() -> float:
     global totalHoles
@@ -119,9 +126,10 @@ def CalculateAvgClubDists():
             result = round(sum(clubDists[key]) / len(clubDists[key]), 2)
             avgClubDists[key] = result
 
-def ScramblingPercentage() -> float:
+# issue with this function right here
+def ScramblingPercentage(playerID: int) -> float:
     global totalHoles
-    girsMissed = totalHoles - TotalGIR()
+    girsMissed = totalHoles - TotalGIR(playerID)
     missedGIRLocations = []
     scrambles = 0
 
@@ -328,14 +336,14 @@ print("AVG. PAR 3 SCORE: {}".format(CalculateAvgParScore(3, par3indexes)))
 print("AVG. PAR 4 SCORE: {}".format(CalculateAvgParScore(4, par4indexes)))
 print("AVG. PAR 5 SCORE: {}".format(CalculateAvgParScore(5, par5indexes)))
 print("BIRDIES OR BETTER PERCENTAGE (%): {}".format(BirdieOrBetterPercentage()))
-print("TOTAL PUTTS: {:<12} AVG. PUTTS PER ROUND: {}".format(TotalPutts(), AveragePutts()))
+print("TOTAL PUTTS: {:<12} AVG. PUTTS PER ROUND: {}".format(TotalPutts(1), AveragePutts(1)))
 
 # fairways hit only applies to par 4 and 5s, hence total is divided by 14 (excludes par 3s)
 print("TOTAL FAIRWAYS HIT: {:<5} FAIRWAY HIT PERCENTAGE (%): {}".format(TotalFairwaysHit(), FairwayHitPercentage()))
 
 print("DRIVING ACCURACY PERCENTAGE (%): {}".format(DrivingAccuracyPercentage()))
-print("TOTAL GREENS IN REGULATION (GIR): {}".format(TotalGIR()))
-print("SCRAMBLING PERCENTAGE(%): {}".format(ScramblingPercentage()))
+print("TOTAL GREENS IN REGULATION (GIR): {}".format(TotalGIR(1)))
+print("SCRAMBLING PERCENTAGE(%): {}".format(ScramblingPercentage(1)))
 print("SAND SAVE PERCENTAGE (%): {}".format(SandSavePercentage()))
 print("PROXIMITY TO HOLE (yds): {}".format(ProximityToHole()))
 print("THREE PUT AVOIDANCE (%): {}".format(ThreePutAvoidance()))
@@ -348,3 +356,5 @@ print(" CLUB   AVG. DISTANCE (yds)")
 print("---------------------------")
 for club, avgDist in avgClubDists.items():
     print("{:<14}{}".format(club, avgDist))
+
+print(playerStatsDF)
