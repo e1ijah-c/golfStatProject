@@ -1,4 +1,6 @@
 import pandas as pd
+import numpy as np
+import statistics as st
 
 distanceColumnStrings = ['STROKE_1_DISTANCE', 'STROKE_2_DISTANCE', 'STROKE_3_DISTANCE', 'STROKE_4_DISTANCE', 'STROKE_5_DISTANCE', 
                          'STROKE_6_DISTANCE', 'STROKE_7_DISTANCE', 'STROKE_8_DISTANCE', 'STROKE_9_DISTANCE', 'STROKE_10_DISTANCE']
@@ -45,7 +47,7 @@ def CalculateAvgParScore(par: float, parIndexList: list) -> float:
 
 def TotalPutts() -> int:
     # gets total number of putts used throughout all 18 holes by summing the 'PUTTS' column
-    return df.loc[: , 'PUTTS'].sum()
+    return int(df.loc[: , 'PUTTS'].sum())
 
 def AveragePutts() -> int:
     global totalHoles
@@ -132,9 +134,13 @@ def CalculateAvgClubDists():
         key = str(clubs[c])
         # begins counting average only if the club is used more than 5 times
         if len(clubDists[key]) < 5:
-            avgClubDists[key] = 0
-
-        elif key == 'L Wedge':
+            if len(clubDists[key]) == 0:
+                avgClubDists[key] = "No Data"
+            else:
+                avgClubDists[key] = round(st.mean(clubDists[key]), 2)
+        
+        # special case for Wedges where only the 5 longest strokes are averaged
+        elif 'Wedge' in key:
             # sort list in descending order
             clubDists[key].sort(reverse=True)
             # get the top 5 longest shots
@@ -142,30 +148,39 @@ def CalculateAvgClubDists():
             for n in range(5):
                 top5LWedgeDists.append(clubDists[key][n])
             # get average of those 5 shots
-            avgClubDists[key] = round((sum(top5LWedgeDists) / 5), 2)
+            avgClubDists[key] = round(st.mean(top5LWedgeDists), 2)
+        
+        # disregard putting distance
+        elif key == 'Putter':
+            return 
 
         else:
+            # arrange the distances in descending order (largest to smallest)
             clubDists[key].sort(reverse=True)
             top5ClubDists = []
             distsInRange = []
 
+            # store the 5 longest distances in a seperate list
             for n in range(5):
                 top5ClubDists.append(clubDists[key][n])
-            
-            avgTop5ClubDists = round(sum(top5ClubDists) / 5, 2)
 
-            distError = avgTop5ClubDists * 0.1
+            # calculate the mean (average) of the top 5 clubs
+            avgTop5ClubDists = st.mean(top5ClubDists)
 
+            # calculate error of 5% of the average
+            distError = avgTop5ClubDists * 0.05
+
+            # store the number of distance values that fall within 5% of the averaged top 5 longest distances
             for d in range(len(clubDists[key])):
                 if avgTop5ClubDists - distError <= clubDists[key][d] <= avgTop5ClubDists + distError:
-                    distsInRange.append(clubDists[key][d])
-
-            print(key,"- All Distances:", clubDists[key])
-            print(key,"- Average Distance of Top 5 Clubs:", avgTop5ClubDists)
-            print("Min. Dist:", avgTop5ClubDists - distError, "Max. Dist:", avgTop5ClubDists + distError)
-            print(key,"- Distances within Range:", distsInRange)
-            print("")
-            avgClubDists[key] = round(sum(distsInRange) / len(distsInRange), 2)
+                    distsInRange.append(clubDists[key][d]) 
+            
+            # keep final averaged value as the average of the top 5 distances if there are less than 5 distance values that fall within range
+            # otherwise final value is taken as the average of the values that are within the acceptable range of error
+            if len(distsInRange) < 5:
+                avgClubDists[key] = round(avgTop5ClubDists, 2)
+            else:
+                avgClubDists[key] = round(st.mean(distsInRange), 2)
 
 
 def ScramblingPercentage() -> float:
@@ -397,10 +412,29 @@ def GenerateNewColumns():
     df['PUTTS'] = putts
     df['GIR'] = gir
 
-def AddRoundData(roundID: int):
-    totalStrokes = df.loc[:, "SCORE"].sum()
+def AddRoundData(roundID: int, playerID: int):
+    roundStats = []
+    totalStrokes = int(df.loc[:, "SCORE"].sum())
     roundIndex = int(roundID - 1)
 
+
+    roundStats.extend((roundID, playerID, 
+                       totalHoles, totalStrokes, TotalPutts(), TotalGIR(), 
+                       sandSaves, sandShots, SandSavePercentage(), 
+                       TotalPenalties(), 
+                       TotalFairwaysHit(), int(totalHoles - len(par3indexes)), FairwayHitPercentage(), 
+                       successfulDriverAttempts, driverAttempts, DrivingAccuracyPercentage(), 
+                       scrambles, int(totalHoles - TotalGIR()), ScramblingPercentage(), 
+                       birdiesOrBetter, BirdieOrBetterPercentage(), 
+                       doubleBogeysOrWorse, DoubleBogeyOrWorsePercentage(), 
+                       birdiesAfterBogey, holesAfterBogey, BounceBackPercentage(),
+                       ThreePutts, ThreePutAvoidance(), 
+                       ProximityToHole()))
+
+    for i in range(len(roundsStatsDF.columns)):
+        roundsStatsDF.iloc[roundID - 1, i] = roundStats[i]
+
+""" 
     roundsStatsDF.loc[roundIndex, 'Holes_played'] = totalHoles
     roundsStatsDF.loc[roundIndex, 'Total_score'] = totalStrokes
     roundsStatsDF.loc[roundIndex, 'Total_putts'] = TotalPutts()
@@ -437,7 +471,7 @@ def AddRoundData(roundID: int):
     roundsStatsDF.loc[roundIndex, 'Total_three_putts'] = ThreePutts
     roundsStatsDF.loc[roundIndex, 'Three_putt_avoidance'] = ThreePutAvoidance()
 
-    roundsStatsDF.loc[roundIndex, 'Proximity_to_hole'] = ProximityToHole()
+    roundsStatsDF.loc[roundIndex, 'Proximity_to_hole'] = ProximityToHole() """
 
 
 GenerateNewColumns()
@@ -477,6 +511,8 @@ for club, avgDist in avgClubDists.items():
     print("{:<14}{}".format(club, avgDist))
 
 #pd.set_option("display.max_columns", None)
-AddRoundData(1)
-#print(roundsStatsDF)
+AddRoundData(1, 1)
+print(roundsStatsDF)
+
+
 
