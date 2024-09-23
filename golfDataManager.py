@@ -4,16 +4,16 @@ import time
 
 start_time = time.time()
 
-rounds = 10
-players = 4
-
 roundsStatsDF = pd.read_csv('Rounds_stats_per_player.csv')
 playerStatsDF = pd.read_csv('Players_stats.csv')
 
+"""
+Next Step:
+Update the playerStatsDF with the necessary data in this script.
+"""
+
 golfstats.GenerateColumnData()
 golfstats.MakeNewColumns()
-
-print("Players:", golfstats.PlayerCount())
 
 for i in range(golfstats.PlayerCount()):
     golfstats.playerID = i + 1
