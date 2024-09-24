@@ -3,14 +3,14 @@ import numpy as np
 import statistics as st
 
 
-distanceColumnStrings = ['STROKE_1_DISTANCE', 'STROKE_2_DISTANCE', 'STROKE_3_DISTANCE', 'STROKE_4_DISTANCE', 'STROKE_5_DISTANCE', 
-                         'STROKE_6_DISTANCE', 'STROKE_7_DISTANCE', 'STROKE_8_DISTANCE', 'STROKE_9_DISTANCE', 'STROKE_10_DISTANCE']
+distanceColumnStrings = ['STROKE_1_DISTANCE', 'STROKE_2_DISTANCE', 'STROKE_3_DISTANCE', 'STROKE_4_DISTANCE', 
+                         'STROKE_5_DISTANCE', 'STROKE_6_DISTANCE', 'STROKE_7_DISTANCE', 'STROKE_8_DISTANCE']
 
-clubColumnStrings = ['STROKE_1_CLUB', 'STROKE_2_CLUB', 'STROKE_3_CLUB', 'STROKE_4_CLUB', 'STROKE_5_CLUB', 
-                      'STROKE_6_CLUB', 'STROKE_7_CLUB', 'STROKE_8_CLUB', 'STROKE_9_CLUB', 'STROKE_10_CLUB']
+clubColumnStrings = ['STROKE_1_CLUB', 'STROKE_2_CLUB', 'STROKE_3_CLUB', 'STROKE_4_CLUB', 
+                     'STROKE_5_CLUB', 'STROKE_6_CLUB', 'STROKE_7_CLUB', 'STROKE_8_CLUB']
 
-lieColumnStrings = ['STROKE_1_LIE', 'STROKE_2_LIE', 'STROKE_3_LIE', 'STROKE_4_LIE', 'STROKE_5_LIE', 
-                    'STROKE_6_LIE', 'STROKE_7_LIE', 'STROKE_8_LIE', 'STROKE_9_LIE', 'STROKE_10_LIE', ]
+lieColumnStrings = ['STROKE_1_LIE', 'STROKE_2_LIE', 'STROKE_3_LIE', 'STROKE_4_LIE', 
+                    'STROKE_5_LIE', 'STROKE_6_LIE', 'STROKE_7_LIE', 'STROKE_8_LIE']
 
 clubs = ["DRIVER", "3 Wood", "5 Wood", "4 Iron", "5 Iron", "6 Iron", "7 Iron", "8 Iron", "9 Iron", "P Wedge", "G Wedge", "S Wedge", "L Wedge", "Putter"]
 
@@ -29,44 +29,15 @@ totalHoles = 0
 
 #   df = pd.read_csv('Raw_Data_Example.csv')
 df = pd.read_csv('Real_Data_1.csv')
-
 roundsStatsDF = pd.read_csv('Rounds_stats_per_player.csv')
 
-def PlayerCount() -> int:
-    return df['PLAYER_ID'].nunique()
-
-def UpdatePlayerIndexes():
-    global player_indexes
-    player_indexes = []
-    
-    for i in range(len(df.index)):
-        if df.loc[i, 'PLAYER_ID'] == playerID:
-            player_indexes.append(i)
-
-def RoundCount() -> int:
-    rounds = []
-    
-    for r in range(len(player_indexes)):
-        rounds.append(int(df.loc[r, 'ROUND_ID']))
-    
-    return len(set(rounds)) 
-
-def UpdateRoundIndexes():
-    global round_indexes
-    round_indexes = []
-
-    for i in range(len(player_indexes)):
-        if df.loc[player_indexes[i], 'ROUND_ID'] == roundID:
-            round_indexes.append(player_indexes[i])
     
 def UpdateTotalHoles():
     global totalHoles
-    #totalHoles = len(round_indexes)
     totalHoles = len(df)
 
-
 def ScoringAverage() -> float:
-    totalStrokes = df.loc[round_indexes[0]:round_indexes[-1], "STROKES USED"].sum()
+    totalStrokes = df["STROKES USED"].sum()
 
     return round((totalStrokes / totalHoles), 2)
 
@@ -86,38 +57,28 @@ def UpdateParIndexes():
     par3indexes, par4indexes, par5indexes = [], [], []
 
     for i in range(totalHoles):
-        if df.loc[round_indexes[i], 'PAR'] == 3:
-            par3indexes.append(round_indexes[i])
-        elif df.loc[round_indexes[i], 'PAR'] == 3:
-            par4indexes.append(round_indexes[i])
+        if df.loc[i, 'PAR'] == 3:
+            par3indexes.append(i)
+        elif df.loc[i, 'PAR'] == 3:
+            par4indexes.append(i)
         else: 
-            par5indexes.append(round_indexes[i])
+            par5indexes.append(i)
 
 def TotalPutts() -> int:
     # gets total number of putts used throughout all 18 holes by summing the 'PUTTS' column
-    return int(df.loc[round_indexes[0]:round_indexes[-1] , 'PUTTS'].sum())
+    return df['PUTTS'].sum()
 
 def AveragePutts() -> int:
     return round(TotalPutts() / totalHoles, 2)
 
 def TotalFairwaysHit() -> int:
-    #return playerStatsDF.loc[playerID - 1, 'Total_Fairways_hit']
-    totalFairways = 0
+    return sum(df['FAIRWAY_HIT'] == 'YES')
 
-    for i in range(totalHoles):
-        if df.loc[round_indexes[i], 'STROKE_2_LIE'] == "FAIRWAY":
-            totalFairways += 1
-
-    for i in range(len(par3indexes)):
-        if df.loc[par3indexes[i], 'STROKE_2_LIE'] == "FAIRWAY":
-            totalFairways -= 1
-    
-    return totalFairways
 
 def FairwayHitPercentage() -> float:
     par3s = 0
     for i in range(totalHoles):
-        if df.loc[round_indexes[i], 'PAR'] == 3:
+        if df.loc[i, 'PAR'] == 3:
             par3s += 1
 
     holesWithoutPar3s = totalHoles - par3s
@@ -129,7 +90,7 @@ def TotalGIR() -> int:
 
     # counts the total number of GIRs
     for i in range(totalHoles):
-        if gir[round_indexes[i]] == "YES":
+        if gir[i] == "YES":
             totalGIR += 1
     
     return totalGIR
@@ -139,7 +100,7 @@ def DrivingAccuracyPercentage() -> float:
     global lieColumnStrings
     global driverAttempts 
     global successfulDriverAttempts
-    successfulLies = ["FAIRWAY", "GREEN"]
+    successfulLies = ["Fairway", "Green"]
     driverLocations = {}
     driverAttempts, successfulDriverAttempts = 0, 0
 
@@ -151,10 +112,10 @@ def DrivingAccuracyPercentage() -> float:
     # store the index for each hole that a driver was used into their respective lists inside the dictionary & tally up the total times the driver was used
     for i in range(totalHoles):
         for c in range(len(clubColumnStrings)):
-            if df.loc[round_indexes[i], clubColumnStrings[c]] == "DRIVER":
+            if df.loc[i, clubColumnStrings[c]] == "Driver":
                 driverAttempts += 1
                 col = str(clubColumnStrings[c])
-                driverLocations[col].append(round_indexes[i])
+                driverLocations[col].append(i)
     
     # go through each stroke for every hole in which a driver was used 
     # next, check if the corresponding lie is on the fairway or green; counting a successful driver attempt if it was
@@ -245,8 +206,8 @@ def ScramblingPercentage() -> float:
 
     # get location of all the holes where GIR is missed
     for i in range(totalHoles):
-        if df.loc[round_indexes[i], "GIR"] == "NO":
-            missedGIRLocations.append(round_indexes[i])
+        if df.loc[i, "GIR"] == "NO":
+            missedGIRLocations.append(i)
     
     # for each of these holes, check if par or better is met
     for i in range(len(missedGIRLocations)):
@@ -265,9 +226,9 @@ def SandSavePercentage() -> float:
     # get number of shots from the bunker and their locations in the dataframe
     for i in range(totalHoles):
         for l in range(len(lieColumnStrings)):
-            if df.loc[round_indexes[i], lieColumnStrings[l]] == "BUNKER":
+            if df.loc[i, lieColumnStrings[l]] == "BUNKER":
                 sandShots += 1
-                sandShotLocations.append(round_indexes[i])
+                sandShotLocations.append(i)
     
     # remove duplicates in the sandShotLocations list (i.e. holes where bunker was hit more than once)
     # works by creating dictionary which cannot contain duplicates
@@ -288,7 +249,7 @@ def BirdieOrBetterPercentage() -> float:
     birdiesOrBetter = 0
 
     for i in range(totalHoles):
-        if df.loc[round_indexes[i], "SCORE"] <= -1:
+        if df.loc[i, "SCORE"] <= -1:
             birdiesOrBetter += 1
     
     return round((birdiesOrBetter / totalHoles) * 100, 2)
@@ -299,21 +260,13 @@ def DoubleBogeyOrWorsePercentage() -> float:
     doubleBogeysOrWorse = 0
 
     for i in range(totalHoles):
-        if df.loc[round_indexes[i], 'SCORE'] >= 2:
+        if df.loc[i, 'SCORE'] >= 2:
             doubleBogeysOrWorse += 1
     
     return round((doubleBogeysOrWorse / totalHoles) * 100, 2)
 
 def TotalPenalties() -> int:
-    global lieColumnStrings 
-    penalties = 0
-
-    for i in range(totalHoles):
-        for l in range(len(lieColumnStrings)):
-            if df.loc[round_indexes[i], lieColumnStrings[l]] == 'OTHER/HAZARD':
-                penalties += 1
-
-    return penalties
+    return df['PENALTIES'].sum()
 
 def ProximityToHole() -> float:
     global lieColumnStrings
@@ -330,9 +283,9 @@ def ProximityToHole() -> float:
     # append the index of ALL green lies to its corresponding stroke in the dictionary 
     for i in range(totalHoles):
         for l in range(len(lieColumnStrings)):
-            if df.loc[round_indexes[i], lieColumnStrings[l]] == "GREEN":
+            if df.loc[i, lieColumnStrings[l]] == "Green":
                 key = str(lieColumnStrings[l])
-                greenDict[key].append(round_indexes[i])
+                greenDict[key].append(i)
     
     # find all the duplicates and append them to a seperate list (i.e. duplicate meaning green is hit more than once per hole)
     for l in range(len(lieColumnStrings)):
@@ -374,10 +327,10 @@ def ProximityToHole() -> float:
 def ThreePutAvoidance() -> float:
     global ThreePutts
     ThreePutts = 0
-
+    
+    putts = list(df['PUTTS'])
     for i in range(totalHoles):
-        putts = df.loc[i, :].value_counts()["Putter"]
-        if putts >= 3:
+        if putts[i] >= 3:
             ThreePutts += 1
     
     return round((ThreePutts / totalHoles) * 100, 2)
@@ -390,12 +343,12 @@ def BounceBackPercentage() -> float:
     birdiesAfterBogey = 0
 
     for i in range(totalHoles):
-        if df.loc[round_indexes[i], 'SCORE'] >= 1 and i < totalHoles - 1:
+        if df.loc[i, 'SCORE'] >= 1 and i < totalHoles - 1:
             if df.loc[i+1, 'SCORE'] <= -1:
                 birdiesAfterBogey += 1
     
     for i in range(totalHoles):
-        if df.loc[round_indexes[i], 'SCORE'] >= 1:
+        if df.loc[i, 'SCORE'] >= 1:
             holesAfterBogey += 1
     
     if df.loc[totalHoles - 1, 'SCORE'] >= 1:
@@ -430,7 +383,7 @@ def CalculateScores():
 
 def CalculateFairwaysHit():
 
-    lieCheck = list(df['STROKE_2_LIE'])
+    lieCheck = list(df['STROKE_1_LIE'])
     pars = list(df['PAR'])
 
     for i in range(totalHoles):
@@ -444,7 +397,7 @@ def CalculateFairwaysHit():
 
 def AddRoundData():
     roundStats = []
-    totalStrokes = int(df.loc[round_indexes[0]:round_indexes[-1], "SCORE"].sum())
+    totalStrokes = int(df.loc[:, "SCORE"].sum())
     fairwaysWithoutPar3Holes = int(totalHoles - len(par3indexes))
     holesWithGIRMissed = int(totalHoles - TotalGIR())
 
@@ -473,8 +426,4 @@ def AddRoundData():
     roundsStatsDF.loc[len(roundsStatsDF)] = roundStats
 
 
-UpdateTotalHoles()
-CalculateGIRs()
-CalculateScores()
-CalculateFairwaysHit()
-print(df)
+

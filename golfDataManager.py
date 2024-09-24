@@ -1,4 +1,4 @@
-import golfStatisticsCalculator as golfstats
+import golfStatisticsCalculator as gs
 import pandas as pd
 import time
 
@@ -12,26 +12,32 @@ Next Step:
 Update the playerStatsDF with the necessary data in this script.
 """
 
-golfstats.UpdateTotalHoles()
-golfstats.CalculateGIRs()
-golfstats.CalculateScores()
-golfstats.CalculateFairwaysHit()
+def CalculateStats():
+    gs.UpdateTotalHoles()
+    gs.UpdateParIndexes()
+    gs.CalculateGIRs()
+    gs.CalculateScores()
+    gs.CalculateFairwaysHit()
 
-# for i in range(golfstats.PlayerCount()):
-#     golfstats.playerID = i + 1
-#     golfstats.UpdatePlayerIndexes()
+CalculateStats()
+gs.AddRoundData()
+
+# for i in range(gs.PlayerCount()):
+#     gs.playerID = i + 1
+#     gs.UpdatePlayerIndexes()
     
-#     for r in range(golfstats.RoundCount()):
-#         golfstats.roundID = r + 1
+#     for r in range(gs.RoundCount()):
+#         gs.roundID = r + 1
 
-#         golfstats.UpdateRoundIndexes()
-#         golfstats.UpdateTotalHoles()
-#         golfstats.UpdateParIndexes()
+#         gs.UpdateRoundIndexes()
+#         gs.UpdateTotalHoles()
+#         gs.UpdateParIndexes()
 
-#         golfstats.AddRoundData()
+#         gs.AddRoundData()
+print(gs.df)
 
 pd.set_option("display.max_columns", None)
-print(golfstats.roundsStatsDF)
-#print(golfstats.df)
+print(gs.roundsStatsDF)
+
 
 print("--- %s seconds ---" % (time.time() - start_time))
