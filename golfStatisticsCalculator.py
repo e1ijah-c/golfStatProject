@@ -14,7 +14,7 @@ lieColumnStrings = ['STROKE_1_LIE', 'STROKE_2_LIE', 'STROKE_3_LIE', 'STROKE_4_LI
 
 clubs = ["DRIVER", "3 Wood", "5 Wood", "4 Iron", "5 Iron", "6 Iron", "7 Iron", "8 Iron", "9 Iron", "P Wedge", "G Wedge", "S Wedge", "L Wedge", "Putter"]
 
-scores, putts, strokes, gir = [], [], [], []
+scores, putts, strokes, gir, fairwaysHit = [], [], [], [], []
 sandSaves, sandShots, driverAttempts, successfulDriverAttempts, scrambles, birdiesOrBetter, doubleBogeysOrWorse, holesAfterBogey, birdiesAfterBogey, ThreePutts = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 par3indexes, par4indexes, par5indexes = [], [], []
 clubDists, avgClubDists = {}, {}
@@ -26,7 +26,10 @@ round_indexes, player_indexes = [], []
 totalHoles = 0
 
 # import the data that is going to get analysed as a csv file
-df = pd.read_csv('Raw_Data_Example.csv')
+
+#   df = pd.read_csv('Raw_Data_Example.csv')
+df = pd.read_csv('Real_Data_1.csv')
+
 roundsStatsDF = pd.read_csv('Rounds_stats_per_player.csv')
 
 def PlayerCount() -> int:
@@ -58,7 +61,8 @@ def UpdateRoundIndexes():
     
 def UpdateTotalHoles():
     global totalHoles
-    totalHoles = len(round_indexes)
+    #totalHoles = len(round_indexes)
+    totalHoles = len(df)
 
 
 def ScoringAverage() -> float:
@@ -401,49 +405,42 @@ def BounceBackPercentage() -> float:
         return round((birdiesAfterBogey / holesAfterBogey) * 100, 2)
     else:
         return 0
-        
-def GenerateColumnData():
-    lieOutput = []    
-    
-    for i in range(len(df['STROKES'])):        
-        # calculate score for each hole
-        score = int(df['STROKES'][i] - df['PAR'][i])
-        scores.append(score)
-        
-        # get row index of each hole's par number
-        if df['PAR'][i] == 3:
-            if df.loc[i, 'STROKE_1_LIE'] == "GREEN":
-                gir.append("YES")
-            else:
-                gir.append("NO")
 
-        if df['PAR'][i] == 4:
-            for l in range(2):
-                lieOutput.append(df.loc[i, lieColumnStrings[l]])
-            if "GREEN" in lieOutput:
-                gir.append("YES")
-            else:
-                gir.append("NO")
+def CalculateGIRs():
 
-        if df['PAR'][i] == 5:
-            for l in range(3):
-                lieOutput.append(df.loc[i, lieColumnStrings[l]])
-            if "GREEN" in lieOutput:
-                gir.append("YES")
+    for i in range(totalHoles):
+        if pd.isnull(df.loc[i, 'GIR']) == True:
+            if df.loc[i, 'STROKES'] - df.loc[i, 'PUTTS'] <= df.loc[i, 'PAR'] - 2:
+                gir.append('YES')
             else:
-                gir.append("NO")   
-        
-        lieOutput.clear()
-  
-        stroke = 10 - (pd.isnull(df.loc[i, :]).sum()) / 2
-        strokes.append(stroke)
-        stroke = 0
+                gir.append('NO')
 
-def MakeNewColumns():
-    # add new columns after data analysis
-    df['SCORE'] = scores
-    df['STROKES USED'] = strokes
     df['GIR'] = gir
+
+def CalculateScores():
+
+    strokes = list(df['STROKES'])
+    pars = list(df['PAR'])
+
+    for i in range(totalHoles):
+        score = strokes[i] - pars[i]
+        scores.append(score)
+
+    df['SCORE'] = scores 
+
+def CalculateFairwaysHit():
+
+    lieCheck = list(df['STROKE_2_LIE'])
+    pars = list(df['PAR'])
+
+    for i in range(totalHoles):
+        if lieCheck[i] == 'Fairway' and pars[i] != 3:
+            fairwaysHit.append('YES')
+        else:
+            fairwaysHit.append('NO')
+
+    df['FAIRWAY_HIT'] = fairwaysHit
+
 
 def AddRoundData():
     roundStats = []
@@ -474,3 +471,10 @@ def AddRoundData():
 
     # add new row indicating round ID, player ID, and the corresponsding stats
     roundsStatsDF.loc[len(roundsStatsDF)] = roundStats
+
+
+UpdateTotalHoles()
+CalculateGIRs()
+CalculateScores()
+CalculateFairwaysHit()
+print(df)
