@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 import statistics as st
 
-
 distanceColumnStrings = ['STROKE_1_DISTANCE', 'STROKE_2_DISTANCE', 'STROKE_3_DISTANCE', 'STROKE_4_DISTANCE', 
                          'STROKE_5_DISTANCE', 'STROKE_6_DISTANCE', 'STROKE_7_DISTANCE', 'STROKE_8_DISTANCE']
 
@@ -226,7 +225,7 @@ def SandSavePercentage() -> float:
     # get number of shots from the bunker and their locations in the dataframe
     for i in range(totalHoles):
         for l in range(len(lieColumnStrings)):
-            if df.loc[i, lieColumnStrings[l]] == "BUNKER":
+            if df.loc[i, lieColumnStrings[l]] == "Bunker":
                 sandShots += 1
                 sandShotLocations.append(i)
     
@@ -359,6 +358,34 @@ def BounceBackPercentage() -> float:
     else:
         return 0
 
+def TotalChipShots():
+    return df['CHIP_SHOTS'].sum()
+
+def TotalBunkerAttempts():
+    return df['BUNKER_ATTEMPTS'].sum()
+
+def CheckChipShots():
+    for i in range(totalHoles):
+        chipShots = 0
+        if pd.isnull(df.loc[i, 'CHIP_SHOTS']) == True:
+            for c in range(len(clubColumnStrings)):
+                if pd.isnull(df.loc[i, clubColumnStrings[c]]) == True:
+                    break
+                elif "Wedge" in df.loc[i, clubColumnStrings[c]] and df.loc[i, distanceColumnStrings[c]] <= 50:
+                    chipShots += 1
+            df.loc[i, 'CHIP_SHOTS'] = chipShots
+
+        
+def CheckBunkerAttempts():
+    for i in range(totalHoles):
+        bunkerAttempts = 0
+        if pd.isnull(df.loc[i, 'BUNKER_ATTEMPTS']) == True:
+            for l in range(len(lieColumnStrings)):
+                if df.loc[i, lieColumnStrings[l]] == "Bunker":
+                    bunkerAttempts += 1
+            df.loc[i, 'BUNKER_ATTEMPTS'] = bunkerAttempts
+
+
 def CalculateGIRs():
 
     for i in range(totalHoles):
@@ -394,10 +421,12 @@ def CalculateFairwaysHit():
 
     df['FAIRWAY_HIT'] = fairwaysHit
 
+def FillNaNs():
+    df.fillna(0)
 
 def AddRoundData():
     roundStats = []
-    totalStrokes = int(df.loc[:, "SCORE"].sum())
+    totalStrokes = df["SCORE"].sum()
     fairwaysWithoutPar3Holes = int(totalHoles - len(par3indexes))
     holesWithGIRMissed = int(totalHoles - TotalGIR())
 
@@ -411,7 +440,7 @@ def AddRoundData():
     # add each round's data into a single list
     roundStats.extend((roundID, playerID, 
                        totalHoles, totalStrokes, TotalPutts(), TotalGIR(), 
-                       sandSaves, sandShots, SandSavePercentage(), 
+                       sandSaves, TotalBunkerAttempts(), SandSavePercentage(), 
                        TotalPenalties(), 
                        TotalFairwaysHit(), fairwaysWithoutPar3Holes, FairwayHitPercentage(), 
                        successfulDriverAttempts, driverAttempts, DrivingAccuracyPercentage(), 
@@ -420,7 +449,8 @@ def AddRoundData():
                        doubleBogeysOrWorse, DoubleBogeyOrWorsePercentage(), 
                        birdiesAfterBogey, holesAfterBogey, BounceBackPercentage(),
                        ThreePutts, ThreePutAvoidance(), 
-                       ProximityToHole()))
+                       ProximityToHole(),
+                       TotalChipShots()))
 
     # add new row indicating round ID, player ID, and the corresponsding stats
     roundsStatsDF.loc[len(roundsStatsDF)] = roundStats
