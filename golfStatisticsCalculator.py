@@ -18,16 +18,10 @@ sandSaves, sandShots, driverAttempts, successfulDriverAttempts, scrambles, birdi
 par3indexes, par4indexes, par5indexes = [], [], []
 clubDists, avgClubDists = {}, {}
 
-playerID = 0
-roundID = 0
-
 round_indexes, player_indexes = [], []
 totalHoles = 0
 
-# import the data that is going to get analysed as a csv file
-
-#   df = pd.read_csv('Raw_Data_Example.csv')
-df = pd.read_csv('Real_Data_1.csv')
+df = 'dataframe reference'
 roundsStatsDF = pd.read_csv('Rounds_stats_per_player.csv')
 
     
@@ -194,7 +188,6 @@ def CalculateAvgClubDists():
                 avgClubDists[key] = round(avgTop5ClubDists, 2)
             else:
                 avgClubDists[key] = round(st.mean(distsInRange), 2)
-
 
 def ScramblingPercentage() -> float:
     girsMissed = totalHoles - TotalGIR()
@@ -375,7 +368,6 @@ def CheckChipShots():
                     chipShots += 1
             df.loc[i, 'CHIP_SHOTS'] = chipShots
 
-        
 def CheckBunkerAttempts():
     for i in range(totalHoles):
         bunkerAttempts = 0
@@ -387,7 +379,7 @@ def CheckBunkerAttempts():
 
 
 def CalculateGIRs():
-
+    global gir
     for i in range(totalHoles):
         if pd.isnull(df.loc[i, 'GIR']) == True:
             if df.loc[i, 'STROKES'] - df.loc[i, 'PUTTS'] <= df.loc[i, 'PAR'] - 2:
@@ -398,7 +390,6 @@ def CalculateGIRs():
     df['GIR'] = gir
 
 def CalculateScores():
-
     strokes = list(df['STROKES'])
     pars = list(df['PAR'])
 
@@ -409,7 +400,6 @@ def CalculateScores():
     df['SCORE'] = scores 
 
 def CalculateFairwaysHit():
-
     lieCheck = list(df['STROKE_1_LIE'])
     pars = list(df['PAR'])
 
@@ -421,10 +411,10 @@ def CalculateFairwaysHit():
 
     df['FAIRWAY_HIT'] = fairwaysHit
 
-def FillNaNs():
-    df.fillna(0)
-
 def AddRoundData():
+    global gir
+    global scores
+    global fairwaysHit
     roundStats = []
     totalStrokes = df["SCORE"].sum()
     fairwaysWithoutPar3Holes = int(totalHoles - len(par3indexes))
@@ -438,7 +428,7 @@ def AddRoundData():
     BounceBackPercentage()
 
     # add each round's data into a single list
-    roundStats.extend((roundID, playerID, 
+    roundStats.extend((0, 0, 
                        totalHoles, totalStrokes, TotalPutts(), TotalGIR(), 
                        sandSaves, TotalBunkerAttempts(), SandSavePercentage(), 
                        TotalPenalties(), 
@@ -454,6 +444,10 @@ def AddRoundData():
 
     # add new row indicating round ID, player ID, and the corresponsding stats
     roundsStatsDF.loc[len(roundsStatsDF)] = roundStats
+
+    gir.clear()
+    scores.clear()
+    fairwaysHit.clear()
 
 
 
