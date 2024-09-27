@@ -3,7 +3,7 @@ HOLE,PAR,INDEX,YARDAGE,STROKE_1_DISTANCE,STROKE_1_CLUB,STROKE_1_LIE,STROKE_2_DIS
 2,4,5,360,299,Driver,Fairway,60,L_wedge,Green,,,,,,,,,,,,,,,,,,,4,2,,,,,
 3,5,9,548,329,Driver,Left_rough,213,2_iron,Fringe,,,,,,,,,,,,,,,,,,,4,1,,,,,
 4,3,11,220,225,4_iron,Right_rough,225,,,,,,,,,,,,,,,,,,,,,4,2,,,,,
-5,5,13,590,260,2_iron,Right_rough,260,8_iron,Fairway,165,7_iron,Green,,,,,,,,,,,,,,,,4,2,,,,,
+5,5,13,590,260,2_iron,Right_rough,160,8_iron,Fairway,165,7_iron,Green,,,,,,,,,,,,,,,,4,2,,,,,
 6,4,1,436,314,Driver,Left_rough,74,L_wedge,,,,,,,,,,,,,,,,,,,,4,2,,,,,
 7,3,17,145,131,8_iron,Left_fringe,,,,,,,,,,,,,,,,,,,,,,4,2,,,,,
 8,5,15,535,250,3_wood,Left_rough,187,6_iron,Fairway,90,L_wedge,Green,,,,,,,,,,,,,,,,7,2,,,,,1

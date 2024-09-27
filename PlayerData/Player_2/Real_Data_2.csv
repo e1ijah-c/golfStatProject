@@ -9,7 +9,7 @@ HOLE,PAR,INDEX,YARDAGE,STROKE_1_DISTANCE,STROKE_1_CLUB,STROKE_1_LIE,STROKE_2_DIS
 8,3,14,292,,,,,,,,,,,,,,,,,,,,,,,,,4,2,,,,,
 9,5,10,480,277,Driver,Fairway,233,2_iron,Left_rough,,,,,,,,,,,,,,,,,,,4,1,Yes,,,,
 10,4,11,418,270,Driver,Fairway,142,9_iron,Green,,,,,,,,,,,,,,,,,,,4,2,Yes,,,,
-11,4,366,139,261,3_wood,Fairway,101,Sand_wedge,Green,,,,,,,,,,,,,,,,,,,4,2,Yes,,,,
+11,4,3,366,261,3_wood,Fairway,101,Sand_wedge,Green,,,,,,,,,,,,,,,,,,,4,2,Yes,,,,
 12,5,13,458,292,Driver,Right_rough,,,,,,,,,,,,,,,,,,,,,,4,2,No,,1,,
 13,3,7,195,202,4_iron,,,,,,,,,,,,,,,,,,,,,,,6,2,No,,,,
 14,4,1,438,300,Driver,Fairway,158,8_iron,Green,,,,,,,,,,,,,,,,,,,4,2,Yes,,,,

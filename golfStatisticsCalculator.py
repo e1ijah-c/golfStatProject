@@ -15,6 +15,7 @@ clubs = ["DRIVER", "3 Wood", "5 Wood", "4 Iron", "5 Iron", "6 Iron", "7 Iron", "
 
 scores, putts, strokes, gir, fairwaysHit = [], [], [], [], []
 par3indexes, par4indexes, par5indexes = [], [], []
+holeProximities = []
 sandSaves, sandShots, driverAttempts, successfulDriverAttempts, scrambles, birdiesOrBetter, doubleBogeysOrWorse, holesAfterBogey, birdiesAfterBogey, ThreePutts = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 clubDists, avgClubDists = {}, {}
 totalHoles = 0
@@ -31,16 +32,13 @@ def OverallTotalParPlusMinus():
     return df['PAR +/-'].sum()
 
 def UpdateParIndexes():
-    global par3indexes
-    global par4indexes
-    global par5indexes
-
+    global par3indexes, par4indexes, par5indexes
     par3indexes, par4indexes, par5indexes = [], [], []
 
     for i in range(totalHoles):
         if df.loc[i, 'PAR'] == 3:
             par3indexes.append(i)
-        elif df.loc[i, 'PAR'] == 4:
+        if df.loc[i, 'PAR'] == 4:
             par4indexes.append(i)
         else: 
             par5indexes.append(i)
@@ -284,8 +282,9 @@ def TotalPenalties() -> int:
 def ProximityToHole() -> float:
     global lieColumnStrings
     global distanceColumnStrings
-    duplicates = []
+    global holeProximities
     holeProximities = []
+    duplicates = []
     greenDict = {}
 
     # create dictionary to store each stroke's lie column and the index of their greens
@@ -327,17 +326,16 @@ def ProximityToHole() -> float:
         for g in range(len(greenDict[key])):
             dists = []
             for a in range(l + 1):
-                if a >= 1:
-                    dist = int(df.loc[greenDict[key][g], distanceColumnStrings[l - a]])
-                    dists.append(dist)
+                dist = int(df.loc[greenDict[key][g], distanceColumnStrings[l - a]])
+                dists.append(dist)
             holeYardage = df.loc[greenDict[key][g], "YARDAGE"]
             proximity = int(holeYardage - sum(dists))
-            holeProximities.append(proximity)
+            holeProximities.append(abs(proximity))
             dists.clear()         
 
     return round(sum(holeProximities) / totalHoles, 2)
 
-def ThreePutAvoidance() -> float:
+def ThreePuttAvoidance() -> float:
     global ThreePutts
     ThreePutts = 0
     
@@ -447,6 +445,8 @@ def AddRoundData():
     BirdieOrBetterPercentage()
     DoubleBogeyOrWorsePercentage()
     BounceBackPercentage()
+    ThreePuttAvoidance()
+    ProximityToHole()
 
     # add each round's data into a single list
     roundStats.extend((0, 0, 
@@ -463,8 +463,8 @@ def AddRoundData():
                        birdiesOrBetter, BirdieOrBetterPercentage(), 
                        doubleBogeysOrWorse, DoubleBogeyOrWorsePercentage(), 
                        birdiesAfterBogey, holesAfterBogey, BounceBackPercentage(),
-                       ThreePutts, ThreePutAvoidance(), 
-                       ProximityToHole(),
+                       ThreePutts, ThreePuttAvoidance(), 
+                       sum(holeProximities), ProximityToHole(),
                        TotalChipShots()))
 
     # add new row indicating round ID, player ID, and the corresponsding stats
