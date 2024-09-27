@@ -1,4 +1,4 @@
-Player_id,Rounds_played,Average_score,Average_par3_score,Average_par4_score,Average_par5_score,Average_putts,Bunker_save_percentage,Fairways_hit_percentage,Driving_accuracy,Scrambling_percentage,Birdie_or_better_percentage,Double_bogey_or_worse_percentage,Bounce_back_percentage,Three_putt_avoidance,Proximity_to_hole,Average_chip_shots
+Player_id,Rounds_played,Scoring_average,Average_par_plus_minus,Par_3_scoring_average,Average_par_3_plus_minus,Par_4_scoring_average,Average_par_4_plus_minus,Par_5_scoring_average,Average_par_5_plus_minus,Average_putts,Bunker_save_percentage,Fairways_hit_percentage,Driving_accuracy,Scrambling_percentage,Birdie_or_better_percentage,Double_bogey_or_worse_percentage,Bounce_back_percentage,Three_putt_avoidance,Proximity_to_hole,Average_chip_shots
 1,,,,,,,,,,,,,,,,
 2,,,,,,,,,,,,,,,,
 3,,,,,,,,,,,,,,,,

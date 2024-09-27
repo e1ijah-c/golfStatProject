@@ -30,15 +30,35 @@ def CalculateStats():
     gs.CheckBunkerAttempts()
     gs.CheckChipShots()
     gs.CalculateGIRs()
-    gs.CalculatePlusMinus()
+    gs.CalculateParPlusMinus()
     gs.CalculateFairwaysHit()
 
-def AverageScore(key: str) -> int:
+def AverageTotals(sum_of_parts: int, total_parts: int) -> float:
+    return round(float(sum_of_parts / total_parts), 2)
+
+def ScoringAverage(key: str) -> float:
     cumulativeScore = 0
     for r in range(len(player_round_indexes[key])):
         cumulativeScore += gs.adf.loc[player_round_indexes[key][r], 'Total_score']
     
-    return round(float(cumulativeScore / len(player_round_indexes[key])), 2)
+    return AverageTotals(cumulativeScore, len(player_round_indexes[key]))
+
+def OverallAverageParPlusMinus(key: str) -> float:
+    cumulativePlusMinus = 0
+    for r in range(len(player_round_indexes[key])):
+        cumulativePlusMinus += gs.adf.loc[player_round_indexes[key][r], 'Total_par_plus_minus']
+    
+    return AverageTotals(cumulativePlusMinus, len(player_round_indexes[key]))
+
+def AveragePutts(key: str) -> float:
+    cumulativePutts = 0
+    cumulativeHoles = 0
+    for r in range(len(player_round_indexes[key])):
+        cumulativePutts += gs.adf.loc[player_round_indexes[key][r], 'Total_putts']
+        cumulativeHoles += gs.adf.loc[player_round_indexes[key][r], 'Holes_played']
+    
+    return AverageTotals(cumulativePutts, cumulativeHoles)
+
 
 # get player count by checking number of folders within the main 'PlayerData' folder (one folder per player)
 for player_folder in os.listdir(data_folder_path):
@@ -66,14 +86,20 @@ for i in range(player_count):
         roundIDs.append(d+1)
         playerIDs.append(i+1)
         
-        avgPar3Score = gs.AverageParScore(3)
-        avgPar4Score = gs.AverageParScore(4)
-        avgPar5Score = gs.AverageParScore(5)
+        gs.UpdateParScoringAverage(3), gs.UpdateParScoringAverage(4), gs.UpdateParScoringAverage(5)
+        gs.UpdateAverageParPlusMinus(3), gs.UpdateAverageParPlusMinus(4), gs.UpdateAverageParPlusMinus(5)
 
         print(gs.df)
 
     par_stats[playerKeys[i]] = []
-    par_stats[playerKeys[i]].extend((avgPar3Score, avgPar4Score, avgPar5Score))
+    par_stats[playerKeys[i]].extend((AverageTotals(gs.totalPar3Score, gs.totalPar3Holes), AverageTotals(gs.totalPar3PlusMinus, gs.totalPar3Holes), 
+                                     AverageTotals(gs.totalPar4Score, gs.totalPar4Holes), AverageTotals(gs.totalPar4PlusMinus, gs.totalPar4Holes), 
+                                     AverageTotals(gs.totalPar5Score, gs.totalPar5Holes), AverageTotals(gs.totalPar5PlusMinus, gs.totalPar5Holes)))
+    
+    gs.totalPar3Score, gs.totalPar3PlusMinus, gs.totalPar3Holes = 0, 0, 0
+    gs.totalPar4Score, gs.totalPar4PlusMinus, gs.totalPar4Holes = 0, 0, 0
+    gs.totalPar5Score, gs.totalPar5PlusMinus, gs.totalPar5Holes = 0, 0, 0
+
    
 
 gs.adf['Round_id'] = roundIDs
@@ -88,7 +114,9 @@ for p in range(player_count):
         if gs.adf.loc[i, 'Player_id'] == p+1:
             player_round_indexes[key].append(i)
 
-    player_stats[key].extend((int(p+1), AverageScore(key), par_stats[key][0], par_stats[key][1], par_stats[key][2]))
+    player_stats[key].extend((int(p+1), ScoringAverage(key), OverallAverageParPlusMinus(key), 
+                              par_stats[key][0], par_stats[key][1], par_stats[key][2], par_stats[key][3], par_stats[key][4], par_stats[key][5],
+                              AveragePutts(key)))
 
 
             
