@@ -7,6 +7,7 @@ import time
 Next Step:
 1. Setup data aggregation across multiple rounds and players => completed
 2. Update the playerStatsDF with the necessary data in this script.
+    2a. Potential change: include a total par3/4/5 score/plusminus column in the agregated data frame to avoid messy code
 3. Use ChatGPT to generate more data sets
 """
 
@@ -43,12 +44,37 @@ def ScoringAverage(key: str) -> float:
     
     return AverageTotals(cumulativeScore, len(player_round_indexes[key]))
 
+def ParScoringAverage(key: str, par: int) -> float:
+    cumulativeParScore = 0
+    for r in range(len(player_round_indexes[key])):
+        if par == 3:
+            cumulativeParScore += gs.adf.loc[player_round_indexes[key][r], 'Total_par_3_score']
+        if par == 4:
+            cumulativeParScore += gs.adf.loc[player_round_indexes[key][r], 'Total_par_4_score']
+        if par == 5:
+            cumulativeParScore += gs.adf.loc[player_round_indexes[key][r], 'Total_par_5_score']
+    
+    return AverageTotals(cumulativeParScore, len(player_round_indexes[key]))
+
 def OverallAverageParPlusMinus(key: str) -> float:
     cumulativePlusMinus = 0
     for r in range(len(player_round_indexes[key])):
         cumulativePlusMinus += gs.adf.loc[player_round_indexes[key][r], 'Total_par_plus_minus']
     
     return AverageTotals(cumulativePlusMinus, len(player_round_indexes[key]))
+
+def AverageParPlusMinus(key: str, par: int) -> float:
+    cumulativeParPlusMinus = 0
+    for r in range(len(player_round_indexes[key])):
+        if par == 3:
+            cumulativeParPlusMinus += gs.adf.loc[player_round_indexes[key][r], 'Total_par_3_plus_minus']
+        if par == 4:
+            cumulativeParPlusMinus += gs.adf.loc[player_round_indexes[key][r], 'Total_par_4_plus_minus']
+        if par == 5:
+            cumulativeParPlusMinus += gs.adf.loc[player_round_indexes[key][r], 'Total_par_5_plus_minus']
+    
+    return AverageTotals(cumulativeParPlusMinus, len(player_round_indexes[key]))
+
 
 def AveragePutts(key: str) -> float:
     cumulativePutts = 0
@@ -85,22 +111,6 @@ for i in range(player_count):
         gs.AddRoundData()
         roundIDs.append(d+1)
         playerIDs.append(i+1)
-        
-        gs.UpdateParScoringAverage(3), gs.UpdateParScoringAverage(4), gs.UpdateParScoringAverage(5)
-        gs.UpdateAverageParPlusMinus(3), gs.UpdateAverageParPlusMinus(4), gs.UpdateAverageParPlusMinus(5)
-
-        print(gs.df)
-
-    par_stats[playerKeys[i]] = []
-    par_stats[playerKeys[i]].extend((AverageTotals(gs.totalPar3Score, gs.totalPar3Holes), AverageTotals(gs.totalPar3PlusMinus, gs.totalPar3Holes), 
-                                     AverageTotals(gs.totalPar4Score, gs.totalPar4Holes), AverageTotals(gs.totalPar4PlusMinus, gs.totalPar4Holes), 
-                                     AverageTotals(gs.totalPar5Score, gs.totalPar5Holes), AverageTotals(gs.totalPar5PlusMinus, gs.totalPar5Holes)))
-    
-    gs.totalPar3Score, gs.totalPar3PlusMinus, gs.totalPar3Holes = 0, 0, 0
-    gs.totalPar4Score, gs.totalPar4PlusMinus, gs.totalPar4Holes = 0, 0, 0
-    gs.totalPar5Score, gs.totalPar5PlusMinus, gs.totalPar5Holes = 0, 0, 0
-
-   
 
 gs.adf['Round_id'] = roundIDs
 gs.adf['Player_id'] = playerIDs
@@ -114,16 +124,22 @@ for p in range(player_count):
         if gs.adf.loc[i, 'Player_id'] == p+1:
             player_round_indexes[key].append(i)
 
-    player_stats[key].extend((int(p+1), ScoringAverage(key), OverallAverageParPlusMinus(key), 
-                              par_stats[key][0], par_stats[key][1], par_stats[key][2], par_stats[key][3], par_stats[key][4], par_stats[key][5],
-                              AveragePutts(key)))
+    #player_stats[key].extend((int(p+1), ScoringAverage(key), OverallAverageParPlusMinus(key), 
+    #                         par_stats[key][0], par_stats[key][1], par_stats[key][2], par_stats[key][3], par_stats[key][4], par_stats[key][5],
+    #                          AveragePutts(key)))
+
+    player_stats[key].extend((p+1, ScoringAverage(key), OverallAverageParPlusMinus(key), 
+                             ParScoringAverage(key, 3), AverageParPlusMinus(key, 3), 
+                             ParScoringAverage(key, 4), AverageParPlusMinus(key, 4),
+                             ParScoringAverage(key, 5), AverageParPlusMinus(key, 5),
+                             AveragePutts(key)))
 
 
             
 #print(player_round_indexes)
 print(player_stats)
 #print(dfs)
-#d.set_option("display.max_columns", None)
+pd.set_option("display.max_columns", None)
 print(gs.adf)
 
 print("--- %s seconds ---" % (time.time() - start_time))

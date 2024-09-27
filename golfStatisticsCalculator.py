@@ -18,23 +18,16 @@ par3indexes, par4indexes, par5indexes = [], [], []
 sandSaves, sandShots, driverAttempts, successfulDriverAttempts, scrambles, birdiesOrBetter, doubleBogeysOrWorse, holesAfterBogey, birdiesAfterBogey, ThreePutts = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 clubDists, avgClubDists = {}, {}
 totalHoles = 0
-totalPar3Score, totalPar3Holes, totalPar4Score, totalPar4Holes, totalPar5Score, totalPar5Holes = 0, 0, 0, 0, 0, 0
-totalPar3PlusMinus, totalPar3Holes, totalPar4PlusMinus, totalPar4Holes, totalPar5PlusMinus, totalPar5Holes = 0, 0, 0, 0, 0, 0
+
 
 df = 'dataframe reference'
 adf = pd.read_csv('Rounds_stats_per_player.csv')
 
-    
 def UpdateTotalHoles():
     global totalHoles
     totalHoles = len(df)
 
-def ScoringAverage() -> float:
-    totalScore += df["SCORE"].sum()
-
-    return round((totalScore / totalHoles), 2)
-
-def TotalParPlusMinus():
+def OverallTotalParPlusMinus():
     return df['PAR +/-'].sum()
 
 def UpdateParIndexes():
@@ -52,41 +45,38 @@ def UpdateParIndexes():
         else: 
             par5indexes.append(i)
 
-def UpdateParScoringAverage(par: int) -> float:
-    global totalPar3Score, totalPar3Holes, totalPar4Score, totalPar4Holes, totalPar5Score, totalPar5Holes
-
+def TotalParScore(par: int) -> int:
+    totalParScore = 0
     if par == 3:
         for p in range(len(par3indexes)):
-            totalPar3Score += df.loc[par3indexes[p],'SCORE']
-        totalPar3Holes += len(par3indexes)
+            totalParScore += df.loc[par3indexes[p],'SCORE']
     elif par == 4:
         for p in range(len(par4indexes)):
-            totalPar4Score += df.loc[par4indexes[p],'SCORE']
-        totalPar4Holes += len(par4indexes)
+            totalParScore += df.loc[par4indexes[p],'SCORE']
     elif par == 5:
         for p in range(len(par5indexes)):
-            totalPar5Score += df.loc[par5indexes[p],'SCORE']
-        totalPar5Holes += len(par5indexes)
+            totalParScore += df.loc[par5indexes[p],'SCORE']
     else:
         print('Error: input must be either 3, 4 or 5')
+    
+    return totalParScore
 
-def UpdateAverageParPlusMinus(par: int) -> float:
-    global totalPar3PlusMinus, totalPar3Holes, totalPar4PlusMinus, totalPar4Holes, totalPar5PlusMinus, totalPar5Holes
-
+def TotalParPlusMinus(par: int) -> int:
+    totalParPlusMinus = 0
     if par == 3:
         for p in range(len(par3indexes)):
-            totalPar3PlusMinus += df.loc[par3indexes[p],'PAR +/-']
-        totalPar3Holes += len(par3indexes)
+            totalParPlusMinus += df.loc[par3indexes[p],'PAR +/-']
     elif par == 4:
         for p in range(len(par4indexes)):
-            totalPar4PlusMinus += df.loc[par4indexes[p],'PAR +/-']
-        totalPar4Holes += len(par4indexes)
+            totalParPlusMinus += df.loc[par4indexes[p],'PAR +/-']
     elif par == 5:
         for p in range(len(par5indexes)):
-            totalPar5PlusMinus += df.loc[par5indexes[p],'PAR +/-']
-        totalPar5Holes += len(par5indexes)
+            totalParPlusMinus += df.loc[par5indexes[p],'PAR +/-']
     else:
         print('Error: input must be either 3, 4 or 5')
+    
+    return totalParPlusMinus
+
 
 def TotalPutts() -> int:
     # gets total number of putts used throughout all 18 holes by summing the 'PUTTS' column
@@ -460,7 +450,11 @@ def AddRoundData():
 
     # add each round's data into a single list
     roundStats.extend((0, 0, 
-                       totalHoles, totalScore, TotalParPlusMinus(), TotalPutts(), TotalGIR(), 
+                       totalHoles, totalScore, OverallTotalParPlusMinus(), 
+                       TotalParScore(3), TotalParPlusMinus(3), 
+                       TotalParScore(4), TotalParPlusMinus(4), 
+                       TotalParScore(5), TotalParPlusMinus(5), 
+                       TotalPutts(), TotalGIR(), 
                        sandSaves, TotalBunkerAttempts(), SandSavePercentage(), 
                        TotalPenalties(), 
                        TotalFairwaysHit(), fairwaysWithoutPar3Holes, FairwayHitPercentage(), 
