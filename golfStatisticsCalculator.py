@@ -14,15 +14,13 @@ lieColumnStrings = ['STROKE_1_LIE', 'STROKE_2_LIE', 'STROKE_3_LIE', 'STROKE_4_LI
 clubs = ["DRIVER", "3 Wood", "5 Wood", "4 Iron", "5 Iron", "6 Iron", "7 Iron", "8 Iron", "9 Iron", "P Wedge", "G Wedge", "S Wedge", "L Wedge", "Putter"]
 
 scores, putts, strokes, gir, fairwaysHit = [], [], [], [], []
-sandSaves, sandShots, driverAttempts, successfulDriverAttempts, scrambles, birdiesOrBetter, doubleBogeysOrWorse, holesAfterBogey, birdiesAfterBogey, ThreePutts = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 par3indexes, par4indexes, par5indexes = [], [], []
+sandSaves, sandShots, driverAttempts, successfulDriverAttempts, scrambles, birdiesOrBetter, doubleBogeysOrWorse, holesAfterBogey, birdiesAfterBogey, ThreePutts = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 clubDists, avgClubDists = {}, {}
-
-round_indexes, player_indexes = [], []
 totalHoles = 0
 
 df = 'dataframe reference'
-roundsStatsDF = pd.read_csv('Rounds_stats_per_player.csv')
+adf = pd.read_csv('Rounds_stats_per_player.csv')
 
     
 def UpdateTotalHoles():
@@ -52,10 +50,31 @@ def UpdateParIndexes():
     for i in range(totalHoles):
         if df.loc[i, 'PAR'] == 3:
             par3indexes.append(i)
-        elif df.loc[i, 'PAR'] == 3:
+        elif df.loc[i, 'PAR'] == 4:
             par4indexes.append(i)
         else: 
             par5indexes.append(i)
+
+def AverageParScore(par: int) -> float:
+    totalParScore = 0
+    totalParHoles = 0
+    
+    if par == 3:
+        for p in range(len(par3indexes)):
+            totalParScore += df.loc[par3indexes[p],'+/-']
+        totalParHoles += len(par3indexes)
+    elif par == 4:
+        for p in range(len(par4indexes)):
+            totalParScore += df.loc[par4indexes[p],'+/-']
+        totalParHoles += len(par4indexes)
+    elif par == 5:
+        for p in range(len(par5indexes)):
+            totalParScore += df.loc[par5indexes[p],'+/-']
+        totalParHoles += len(par5indexes)
+    else:
+        print('Error: input must be either 3, 4 or 5')
+
+    return round(float(totalParScore / totalParHoles), 2)
 
 def TotalPutts() -> int:
     # gets total number of putts used throughout all 18 holes by summing the 'PUTTS' column
@@ -132,9 +151,9 @@ def CalculateAvgClubDists():
     # store the distances hit by each club into their respective lists inside of the dictionary
     for n in range(len(clubColumnStrings)):
         for r in range(totalHoles):
-                if pd.isnull(df.loc[round_indexes[r], clubColumnStrings[n]]) == False:
+                if pd.isnull(df.loc[r, clubColumnStrings[n]]) == False:
                     key = str(df.loc[r, clubColumnStrings[n]])
-                    clubDists[key].append(int(df.loc[round_indexes[r], distanceColumnStrings[n]]))
+                    clubDists[key].append(int(df.loc[r, distanceColumnStrings[n]]))
 
     # calculates the average distance of each club and adds it to a seperate dictionary
     for c in range(len(clubs)):
@@ -252,7 +271,7 @@ def DoubleBogeyOrWorsePercentage() -> float:
     doubleBogeysOrWorse = 0
 
     for i in range(totalHoles):
-        if df.loc[i, 'SCORE'] >= 2:
+        if df.loc[i, '+/-'] >= 2:
             doubleBogeysOrWorse += 1
     
     return round((doubleBogeysOrWorse / totalHoles) * 100, 2)
@@ -335,15 +354,15 @@ def BounceBackPercentage() -> float:
     birdiesAfterBogey = 0
 
     for i in range(totalHoles):
-        if df.loc[i, 'SCORE'] >= 1 and i < totalHoles - 1:
-            if df.loc[i+1, 'SCORE'] <= -1:
+        if df.loc[i, '+/-'] >= 1 and i < totalHoles - 1:
+            if df.loc[i+1, '+/-'] <= -1:
                 birdiesAfterBogey += 1
     
     for i in range(totalHoles):
-        if df.loc[i, 'SCORE'] >= 1:
+        if df.loc[i, '+/-'] >= 1:
             holesAfterBogey += 1
     
-    if df.loc[totalHoles - 1, 'SCORE'] >= 1:
+    if df.loc[totalHoles - 1, '+/-'] >= 1:
         holesAfterBogey -= 1
     
     if holesAfterBogey != 0:
@@ -364,7 +383,7 @@ def CheckChipShots():
             for c in range(len(clubColumnStrings)):
                 if pd.isnull(df.loc[i, clubColumnStrings[c]]) == True:
                     break
-                elif "Wedge" in df.loc[i, clubColumnStrings[c]] and df.loc[i, distanceColumnStrings[c]] <= 50:
+                elif "Wedge" in df.loc[i, clubColumnStrings[c]] and df.loc[i, distanceColumnStrings[c]] <= 40:
                     chipShots += 1
             df.loc[i, 'CHIP_SHOTS'] = chipShots
 
@@ -382,22 +401,22 @@ def CalculateGIRs():
     global gir
     for i in range(totalHoles):
         if pd.isnull(df.loc[i, 'GIR']) == True:
-            if df.loc[i, 'STROKES'] - df.loc[i, 'PUTTS'] <= df.loc[i, 'PAR'] - 2:
+            if df.loc[i, 'SCORE'] - df.loc[i, 'PUTTS'] <= df.loc[i, 'PAR'] - 2:
                 gir.append('YES')
             else:
                 gir.append('NO')
 
     df['GIR'] = gir
 
-def CalculateScores():
-    strokes = list(df['STROKES'])
+def CalculatePlusMinus():
+    strokes = list(df['SCORE'])
     pars = list(df['PAR'])
 
     for i in range(totalHoles):
-        score = strokes[i] - pars[i]
-        scores.append(score)
+        plus_minus = strokes[i] - pars[i]
+        scores.append(plus_minus)
 
-    df['SCORE'] = scores 
+    df['+/-'] = scores 
 
 def CalculateFairwaysHit():
     lieCheck = list(df['STROKE_1_LIE'])
@@ -443,7 +462,7 @@ def AddRoundData():
                        TotalChipShots()))
 
     # add new row indicating round ID, player ID, and the corresponsding stats
-    roundsStatsDF.loc[len(roundsStatsDF)] = roundStats
+    adf.loc[len(adf)] = roundStats
 
     gir.clear()
     scores.clear()
